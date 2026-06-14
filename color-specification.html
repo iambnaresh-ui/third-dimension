@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Matcher Studio Minimal Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --white:#ffffff; --surface:#f5f6fa; --glass:rgba(255,255,255,0.72);
+      --border:#e2e6ef; --accent:#4361ee; --accent-dark:#2f4ac7; --accent-light:#eef1fd;
+      --danger:#e63946; --text:#1a1d2e; --muted:#6b7280;
+      --shadow-sm:0 1px 4px rgba(30,40,80,.08); --shadow-md:0 4px 16px rgba(30,40,80,.10); --shadow-lg:0 8px 32px rgba(30,40,80,.13);
+      --radius:18px; --r-sm:12px; --header-h:68px; --footer-h:68px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Open Sans',system-ui,-apple-system,sans-serif;background:var(--surface);color:var(--text);min-height:100vh;padding-top:var(--header-h);padding-bottom:calc(var(--footer-h) + 16px);}
+    header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:1000;}
+    .brand-wrap{display:flex;align-items:center;gap:10px;min-width:0;}
+    .brand-badge{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7b5ea7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;}
+    header h1{font-size:1rem;font-weight:700;font-family:'Outfit',sans-serif;}
+    header span{font-size:.6875rem;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+    .workspace{max-width:1920px;margin:0 auto;padding:28px 18px;display:flex;flex-direction:row;gap:24px; flex-wrap:wrap;}
+    .panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column;}
+    .panel-1, .panel-2{flex:1 0 48%;}
+    .panel-3{flex:1 0 100%;}
+    .panel:hover{box-shadow:var(--shadow-md);}
+    .panel-head{padding:18px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+    .panel-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .panel-title{font-size:1rem;font-weight:700;font-family:'Outfit',sans-serif;color:var(--text);}
+    .panel-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;min-height:0;flex:1;}
+    .upload-zone{position:absolute;inset:0;border:2.5px dashed var(--border);border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;padding:24px 14px;color:var(--muted);font-size:.85rem;font-weight:600;transition:.2s ease;z-index:2;}
+    .upload-zone:hover{border-color:var(--accent);background:var(--accent-light);}
+    .image-container{flex:1;background:#f0f0f0;border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;cursor:grab;min-height:360px;user-select:none;-webkit-user-select:none;}
+    .image-container:active{cursor:grabbing;}
+    #previewImg{max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none;transform:translate(0,0) scale(1);transition:transform .05s ease-out;user-select:none;-webkit-user-select:none;}
+    .picker-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(67,97,238,.92);color:#fff;font-size:.75rem;padding:5px 12px;border-radius:999px;display:none;z-index:4;pointer-events:none;font-weight:700;}
+    .picker-loupe{display:none;position:absolute;width:110px;height:110px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--accent),0 8px 22px rgba(0,0,0,.3);pointer-events:none;z-index:4;overflow:hidden;background:#fff;}
+    .picker-loupe canvas{width:110px;height:110px;display:block;}
+    .picker-loupe::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(var(--accent) 0 0) center/1px 22px no-repeat,linear-gradient(var(--accent) 0 0) center/22px 1px no-repeat;}
+    .controls-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);}
+    .slider-ctrl{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);font-weight:600;}
+    input[type=range]{width:120px;accent-color:var(--accent);}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);font-size:.82rem;font-weight:600;cursor:pointer;background:#fff;transition:.2s ease;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-dark);}
+    #paletteSwatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px;flex:1;padding:5px;}
+    .p-swatch{
+      min-height:164px;border-radius:12px;border:1px solid var(--border);cursor:pointer;position:relative;box-shadow:var(--shadow-sm);
+      background:#fff;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s ease, box-shadow .18s ease;
+      box-shadow: 0px 0px 20px -10px #4e4e4e;
+    }
+    .p-swatch:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+    .p-swatch::before{
+      content:"";
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      border:2px solid #cbd5e1;
+      background:#fff;
+      box-shadow:0 1px 2px rgba(15,23,42,.08);
+      z-index:2;
+    }
+    .p-swatch.selected::before{
+      border-color:var(--accent);
+      background:var(--accent);
+    }
+    .p-swatch.selected::after{
+      content:"\2713";
+      position:absolute;
+      top:21px;
+      right:21px;
+      transform:translate(50%,-50%);
+      font-size:11px;
+      line-height:1;
+      color:#fff;
+      font-weight:800;
+      z-index:3;
+    }
+    .palette-preview{height:84px;border-bottom:1px solid var(--border);}
+    .palette-meta{padding:8px 10px 0;display:flex;flex-direction:column;gap:3px;}
+    .palette-hex{font-size:.88rem;font-weight:700;font-family:"Courier New",monospace;color:var(--text);}
+    .palette-rgb{font-size:.68rem;color:var(--muted);}
+    .palette-actions{margin-top:auto;padding:8px 10px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .palette-act-btn{
+      border:1px solid var(--border);border-radius:8px;background:var(--surface);font-size:.7rem;font-weight:700;
+      padding:6px 8px;cursor:pointer;color:var(--text);transition:.15s ease;
+    }
+    .palette-act-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+    .palette-act-btn.delete:hover{border-color:var(--danger);color:var(--danger);background:#fff1f2;}
+    .picker-section{display:none;}
+    .modal-overlay{
+      display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:3000;
+      align-items:center;justify-content:center;padding:12px;
+    }
+    .modal-overlay.open{display:flex;}
+    .modal-box{
+      width:360px;max-width:100%;background:#fff;border-radius:14px;border:1px solid var(--border);
+      box-shadow:var(--shadow-lg);padding:18px;display:flex;flex-direction:column;gap:12px;
+    }
+    .modal-title{font-size:1rem;font-weight:700;font-family:'Outfit',sans-serif;}
+    .add-color-input{width:100%;height:44px;border:1px solid var(--border);border-radius:10px;padding:4px;background:#fff;cursor:pointer;}
+    .modal-preview{height:66px;border-radius:10px;border:1px solid var(--border);}
+    .modal-row{display:flex;flex-direction:column;gap:6px;}
+    .modal-row label{font-size:.76rem;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+    .add-color-preview{height:56px;border:1px solid var(--border);border-radius:10px;}
+    #results{flex:1;overflow-y:auto;display:flex;flex-direction:row;gap:16px;padding-right:2px;flex-wrap:wrap;}
+    .result-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px; flex:1 0 48%;}
+    .result-top{display:flex;align-items:center;gap:10px;}
+    .source-chip{width:26px;height:26px;border-radius:8px;border:1px solid rgba(0,0,0,.08);flex:0 0 auto;}
+    .match-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+    .match-tile{
+      position:relative;
+      min-height:130px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.28);
+      padding:14px 12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      gap:8px;
+      overflow:hidden;
+      background:var(--match-color,#fff);
+      color:var(--match-text,#0f172a);
+      box-shadow:0 10px 24px rgba(15,23,42,.18);
+      transition:transform .22s ease, box-shadow .22s ease, filter .22s ease;
+    }
+    .match-tile::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(to bottom, rgba(255,255,255,.22), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .match-tile:hover{
+      transform:translateY(-4px) scale(1.01);
+      box-shadow:0 16px 28px rgba(15,23,42,.24);
+      filter:saturate(1.05);
+    }
+    .match-swatch{display:none;}
+    .match-name{
+      position:relative;
+      z-index:1;
+      font-size:.95rem;
+      font-weight:600;
+      line-height:1.2;
+      color:inherit;
+      text-shadow:0 1px 2px rgba(0,0,0,.15);
+      max-width:100%;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-family: 'Outfit',sans-serif;
+    }
+    .match-code{
+      position:relative;
+      z-index:1;
+      font-size:.78rem;
+      font-weight:500;
+      font-family: 'Outfit', sans-serif;
+      color:inherit;
+      opacity:.92;
+      letter-spacing:.01em;
+    }
+    .match-percent{
+      position:relative;
+      z-index:1;
+      font-size:.72rem;
+      font-weight:500;
+      font-family: 'Outfit', sans-serif;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.45);
+      background:rgba(255,255,255,.22);
+      color:inherit;
+      backdrop-filter:blur(2px);
+      -webkit-backdrop-filter:blur(2px);
+    }
+    #paletteSwatches::-webkit-scrollbar,#results::-webkit-scrollbar{width:8px;}
+    #paletteSwatches::-webkit-scrollbar-thumb,#results::-webkit-scrollbar-thumb{background:#c7d0e5;border-radius:999px;}
+    #paletteSwatches::-webkit-scrollbar-track,#results::-webkit-scrollbar-track{background:#ecf0f7;}
+
+    /* A4 Premium Print Layout */
+    #premiumPrintWrapper {
+      position: fixed; top: -9999px; left: -9999px; width: 1120px; min-height: 792px; height: auto;
+      background:
+        radial-gradient(circle at 88% 10%, rgba(99,102,241,.12), transparent 35%),
+        radial-gradient(circle at 12% 88%, rgba(249,115,22,.11), transparent 34%),
+        linear-gradient(145deg, #f8fafc 0%, #eef2ff 48%, #f8fafc 100%);
+      color: #0f172a; padding: 30px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+      font-family:'Open Sans', system-ui, sans-serif;
+    }
+    .print-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff, #eef2ff);
+      border: 1px solid #dbe3f4;
+      box-shadow: 0 4px 16px rgba(30,41,59,.08);
+      flex-shrink:0;
+    }
+    .print-header h2 {
+      font-size: 22px; font-weight: 800; color: #1e1b4b; margin:0;
+      letter-spacing:.2px;
+      font-family:'Outfit', sans-serif;
+    }
+    .print-body { display: flex; gap: 18px; margin-top: 6px; min-height: 0; align-items: stretch; }
+    .print-image-panel {
+      width: 43%;
+      background: linear-gradient(155deg, #ffffff, #f4f7ff);
+      border-radius: 14px; border: 1px solid #dde5f3;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      box-shadow: 0 8px 18px rgba(30,41,59,.1);
+      padding: 8px;
+    }
+    .print-image-panel img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
+    .print-data-panel { width: 57%; display: flex; flex-direction: column; gap: 8px; overflow: visible; }
+    .print-row-item {
+      display: flex; align-items: center; gap: 10px;
+      background: linear-gradient(120deg, #ffffff, #f8fafc);
+      padding: 8px 10px;
+      border-radius: 10px; border: 1px solid #e2e8f0;
+      box-shadow: 0 3px 8px rgba(30,41,59,.06);
+    }
+    .print-source { display: flex; align-items: center; width: 30px; flex-shrink: 0; }
+    .print-source-chip {
+      width: 26px; height: 26px; border-radius: 7px;
+      border: 1px solid rgba(15,23,42,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+    }
+    .print-matches-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: 1; }
+    .print-match-box {
+      position: relative;
+      min-height: 72px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.35);
+      background: var(--print-match-color, #fff);
+      color: var(--print-match-text, #0f172a);
+      box-shadow: 0 6px 12px rgba(15,23,42,.14);
+      padding: 8px 7px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+      overflow: hidden;
+    }
+    .print-match-box::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(to bottom, rgba(255,255,255,.2), rgba(255,255,255,.04));
+      pointer-events:none;
+    }
+    .print-match-swatch { display:none; }
+    .print-match-info { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; min-width:0; gap:3px; }
+    .print-name {
+      font-size: 9px; font-weight: 700; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95px;
+      font-family:'Outfit', sans-serif;
+    }
+    .print-code { font-size: 8px; font-weight: 700; color: inherit; opacity:.94; letter-spacing:.2px; }
+    .print-pct{
+      font-size:7px;
+      font-weight:700;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.45);
+      background:rgba(255,255,255,.22);
+      color:inherit;
+    }
+    .print-notice-box {
+      background: linear-gradient(130deg, #0f172a, #1e293b);
+      border-radius: 12px; padding: 12px 16px;
+      border-left: 4px solid #f59e0b; color: #e2e8f0; text-align: left; flex-shrink:0;
+      box-shadow: 0 8px 16px rgba(15,23,42,.28);
+    }
+    .print-notice-title { font-size: 11px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 4px; }
+    .print-notice-desc { font-size: 9px; font-weight: 500; line-height: 1.45; color: #cbd5e1; }
+    #premiumPrintWrapper.print-compact { padding: 20px; gap: 8px; }
+    #premiumPrintWrapper.print-compact .print-header { padding: 10px 12px; }
+    #premiumPrintWrapper.print-compact .print-header h2 { font-size: 18px; }
+    #premiumPrintWrapper.print-compact .print-body { gap: 12px; }
+    #premiumPrintWrapper.print-compact .print-row-item { padding: 5px 7px; gap: 7px; }
+    #premiumPrintWrapper.print-compact .print-source-chip { width: 22px; height: 22px; }
+    #premiumPrintWrapper.print-compact .print-match-box { padding: 5px 5px; min-height: 58px; }
+    #premiumPrintWrapper.print-compact .print-name { font-size: 8px; max-width: 74px; }
+    #premiumPrintWrapper.print-compact .print-code { font-size: 7px; }
+    #premiumPrintWrapper.print-compact .print-pct { font-size: 6px; padding: 1px 6px; }
+    #premiumPrintWrapper.print-compact .print-notice-box { padding: 9px 12px; }
+    #premiumPrintWrapper.print-compact .print-notice-desc { font-size: 8px; }
+    #premiumPrintWrapperVertical{
+      position: fixed; top: -9999px; left: -9999px; width: 794px; min-height: 1120px; height: auto;
+      background:
+        radial-gradient(circle at 88% 10%, rgba(99,102,241,.1), transparent 32%),
+        radial-gradient(circle at 12% 88%, rgba(249,115,22,.09), transparent 30%),
+        linear-gradient(145deg, #f8fafc 0%, #eef2ff 48%, #f8fafc 100%);
+      color:#0f172a; padding:24px; display:flex; flex-direction:column; gap:10px; box-sizing:border-box;
+      font-family:'Open Sans', system-ui, sans-serif;
+    }
+
+    .bottom-actions{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);background:var(--white);border-top:1px solid var(--border);box-shadow:0 -4px 16px rgba(30,40,80,.08);display:flex;align-items:center;justify-content:center;gap:12px;z-index:1000;padding:0 18px;}
+    .bottom-actions > div{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+    .bottom-actions .btn[onclick="clearAll()"]{background:var(--danger)!important;border-color:var(--danger)!important;color:#fff!important;}
+    #exportJpgBtn{background:#fff!important;color:var(--text)!important;border:1px solid var(--border)!important;}
+    #exportPdfBtn{background:var(--accent)!important;color:#fff!important;border:1px solid var(--accent)!important;}
+    @media (max-width:680px){
+      header{padding:0 14px;}
+      header span{display:none;}
+      .workspace{padding:18px 12px;}
+      .panel-body{padding:16px;}
+      .panel-head{padding:14px 16px 12px;}
+      .match-grid{grid-template-columns:1fr;}
+      #paletteSwatches{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+      .bottom-actions{gap:8px;}
+      .btn{font-size:12px;padding:8px 11px;}
+    }
+    @media (min-width:681px) and (max-width:1024px){
+      .match-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <div class="brand-badge">C</div>
+    <h1>Color Matcher Studio</h1>
+  </div>
+  <span>Third Dimension Arch-Viz Studio</span>
+</header>
+
+<div class="workspace">
+  <section class="panel panel-1">
+    <div class="panel-head">
+      <div class="panel-title">Workspace (Scroll to Zoom · Drag to Move)</div>
+      <div class="panel-head-actions">
+        <button class="btn" id="workspacePickBtn" type="button" style="display:none;">Pick Color From Image</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="image-container" id="canvasContainer">
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          Drop an image or click to upload
+          <input type="file" id="fileInput" accept="image/*" hidden>
+        </div>
+        <div class="picker-hint" id="pickerHint">Move on image and click to pick color</div>
+        <div class="picker-loupe" id="pickerLoupe"><canvas id="loupeCanvas" width="110" height="110"></canvas></div>
+        <img id="previewImg" draggable="false" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1'><rect width='20' height='20' x='2' y='2' rx='2'></rect></svg>" alt="Preview">
+      </div>
+    </div>
+  </section>
+
+  <section class="panel panel-2">
+    <div class="panel-head">
+      <div class="panel-title">Palette</div>
+      <div class="panel-head-actions">
+        <button class="btn" id="addColorBtn" type="button">+ Add Color</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="controls-row">
+        <label class="slider-ctrl">Density
+          <input type="range" id="colorCount" min="4" max="16" value="12" step="1" oninput="document.getElementById('countVal').textContent=this.value">
+          <strong id="countVal">12</strong>
+        </label>
+        <button class="btn btn-primary" onclick="extractColors()">Resample</button>
+      </div>
+
+      <div id="paletteSwatches"></div>
+
+      <div class="picker-section"></div>
+    </div>
+  </section>
+
+  <section class="panel panel-3">
+    <div class="panel-head">
+      <div class="panel-title">Matches</div>
+    </div>
+    <div class="panel-body">
+      <div id="results">
+        <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;width:100%;">
+          Upload an image to see matches.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="premiumPrintWrapper">
+  <div class="print-header">
+    <h2>Asian Paints Specification Report</h2>
+    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#6b7280;">Third Dimension Arch-Viz Studio</div>
+  </div>
+  <div class="print-body">
+    <div class="print-image-panel">
+      <img id="printTargetImg" src="" alt="Visual Reference Source">
+    </div>
+    <div class="print-data-panel" id="printMatchesOutput"></div>
+  </div>
+  <div class="print-notice-box">
+    <div class="print-notice-title">Important Notice</div>
+    <div class="print-notice-desc">
+      Please make sure to compare the shades available at Asian Paints in person by obtaining samples and examining them before making your final decision. Keep in mind that colors can appear differently due to factors such as display color profiles, screen brightness, and printing variations. It's your responsibility to make the final choice of colors. Select colors carefully; we do not take any responsibility for errors that may occur. Thank you.
+    </div>
+  </div>
+</div>
+
+<div class="bottom-actions">
+  <button class="btn" style="background:#fee2e2;color:#b91c1c;" onclick="clearAll()">Reset</button>
+  <div style="display:flex; gap:10px;">
+    <button class="btn" id="exportJpgBtn" style="display:none;background:#e5eefc;color:#1d4ed8;" onclick="exportBundle('jpg')">Export JPG (A4)</button>
+    <button class="btn btn-primary" id="exportPdfBtn" style="display:none;" onclick="exportBundle('pdf')">Export PDF (A4)</button>
+    <button class="btn" id="exportVJpgBtn" style="display:none;background:#e5eefc;color:#1d4ed8;" onclick="exportBundle('jpg','vertical')">Export Vertical JPG</button>
+    <button class="btn btn-primary" id="exportVPdfBtn" style="display:none;" onclick="exportBundle('pdf','vertical')">Export Vertical PDF</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="paletteEditModal">
+  <div class="modal-box">
+    <div class="modal-title">Edit Palette Color</div>
+    <div class="modal-preview" id="paletteEditPreview"></div>
+    <div class="modal-row">
+      <label>Hue <span id="editHueValue">0°</span></label>
+      <input type="range" id="editHue" min="0" max="360" value="0">
+    </div>
+    <div class="modal-row">
+      <label>Saturation <span id="editSatValue">0%</span></label>
+      <input type="range" id="editSat" min="0" max="100" value="0">
+    </div>
+    <div class="modal-row">
+      <label>Lightness <span id="editLightValue">0%</span></label>
+      <input type="range" id="editLight" min="0" max="100" value="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelEditBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addColorModal">
+  <div class="modal-box">
+    <div class="modal-title">Add Color</div>
+    <div class="add-color-preview" id="addColorPreview"></div>
+    <div class="modal-row">
+      <label>Choose Color <span id="addHexValue">#ff0000</span></label>
+      <input type="color" id="addColorInput" class="add-color-input" value="#ff0000">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelAddBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveAddBtn">Add</button>
+    </div>
+  </div>
+</div>
+
+<div id="premiumPrintWrapperVertical">
+  <div class="print-header">
+    <h2>Asian Paints Specification Report</h2>
+    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#6b7280;">Third Dimension Arch-Viz Studio</div>
+  </div>
+  <div class="print-body" style="flex-direction:column;">
+    <div class="print-image-panel" style="width:100%;height:280px;">
+      <img id="printTargetImgVertical" src="" alt="Visual Reference Source">
+    </div>
+    <div class="print-data-panel" id="printMatchesOutputVertical" style="width:100%;"></div>
+  </div>
+  <div class="print-notice-box">
+    <div class="print-notice-title">Important Notice</div>
+    <div class="print-notice-desc">
+      Please make sure to compare the shades available at Asian Paints in person by obtaining samples and examining them before making your final decision. Keep in mind that colors can appear differently due to factors such as display color profiles, screen brightness, and printing variations. It's your responsibility to make the final choice of colors. Select colors carefully; we do not take any responsibility for errors that may occur. Thank you.
+    </div>
+  </div>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+// Complete integrated matrix from AP_ColorMatcher.html
+const AP_COLORS = [["9436","Air Breeze",242,228,223],["8108","Button Rose",247,234,229],["8116","Soft Breeze",239,227,223],["8716","Zinnia Bloom",247,226,226],["8099","Essence",247,226,224],["8092","Pink Mist",245,226,226],["8124","Angel Harp",231,211,211],["5182","Lucid Dream",247,237,233],["8100","Winged Angel",246,237,233],["8140","Touch Of Fuschia",247,235,229],["8060","Day Lily",245,230,225],["8084","Tinge Of Rose",249,233,222],["8036","Soft Chenille",244,230,221],["8676","Zen",243,227,215],["8620","White Clay",249,228,209],["8012","Milkshake",236,231,228],["7148","Lilac Frost",239,232,227],["8204","Twilight Sky",239,234,230],["L178","Daisy Bloom",247,235,228],["8068","Willow Creek",247,235,226],["8052","Gossamer",247,235,224],["L139","Blush",234,222,213],["945","Summer Blush",231,222,207],["9516","Fresh Fuel",234,231,225],["L164","White Butter",247,240,230],["L145","White Cameo",243,236,222],["L140","Crushed Ice",244,233,218],["L138","Snow Blush",243,234,219],["L147","Harmony",240,229,214],["5184","Macadamia",245,232,217],["8020","Desert Ivory",247,228,203],["951","Coral Shell",238,233,226],["L107","Virgin Lace",247,236,225],["8636","Cobbled Path",235,227,217],["5232","Rose Blush",242,234,225],["L142","Mica Matte",246,236,223],["8028","Peach Organza",240,231,212],["L132","Natural Linen",238,227,207],["L127","Sesame Seed",238,225,203],["L131","Lovely Lace",247,240,221],["7948","Crescent",244,238,217],["7860","Thick Cream",241,227,200],["307","Cream",236,222,198],["3203","Puppy Love",231,220,195],["L188","Buttercream",231,213,185],["L189","Light Butter",228,214,192],["L190","Dawn Dew",230,214,190],["L129","Cold Coffee",247,240,227],["8004","Mellow Orange",247,238,223],["7996","Cream Tone",243,233,221],["L141","South Pole",244,236,222],["L151","Raw Jute",233,223,210],["952","Soft Glow",231,225,214],["L173","White Fog",229,221,208],["8460","Silver Spree",230,220,202],["L135","Sahara Dream",246,240,227],["L150","Pressed Linen",248,241,223],["L126","Sugared Nut",246,240,225],["7972","Powder Puff",249,238,221],["7988","Sombre Moon",236,229,216],["L160","Soft Silk",241,231,212],["L133","Arabian Sand",241,232,216],["L136","Pebble White",230,222,211],["8764","Shepherd Trail",247,241,231],["L146","Sonnet",244,238,224],["L148","Blossom Tint",242,236,222],["7940","Pale Pearl",243,238,221],["L124","Pure Ivory",238,231,218],["8500","Solitaire",240,234,218],["L134","Double Cream",237,231,219],["L157","White Canvas",237,231,220],["L158","Silence",245,240,231],["L143","Rain Drop",240,233,224],["L183","Chalk Powder",243,237,224],["L103","Pearl Star",243,237,224],["L156","Almost Ivory",244,237,223],["L102","Milky Way",239,232,221],["L179","Retro White",233,227,217],["8476","Whitener",224,216,203],["4148","Enlighten",246,240,222],["L125","Silver Comet",243,238,223],["L123","Angel Cloud",242,238,227],["L104","Cotton Wool",245,239,225],["L101","Swan Wing",240,234,220],["L149","Eggshell",240,233,218],["L174","Vanilla Mist",233,228,217],["8436","White Delight",230,224,211],["L159","Dreamy Night",244,240,229],["L144","Love Song",242,238,226],["L170","Sea Shine",247,242,227],["7932","Blank Canvas",239,234,223],["8444","Ice Crystal",242,238,227],["L105","Crystal Peak",243,239,225],["L122","Skimmed Cream",239,232,218],["L175","Soft Snow",233,226,211],["8483","Natural Cream",246,243,232],["L152","Cream Pie",245,242,230],["L155","Pale Sisal",241,236,226],["765","Morning Glory",240,236,222],["L153","Pristine Linen",238,234,222],["8484","Soft Glance",233,229,218],["8428","Glacier Ridge",231,229,218],["L109","Icy Peak",226,222,214],["8300","Confetti",246,243,231],["L154","Pipe Dream",243,239,220],["L121","Moonlight",243,238,218],["7836","Vanilla Ice",246,242,223],["7916","Firefly Flicker",238,236,225],["L176","White Bush",236,234,220],["8412","Avalanche",227,227,220],["8292","White Gold",217,216,207],["8332","Snowflake",243,242,236],["L161","Absolute White",241,237,228],["L165","Indian Cotton",241,238,224],["L172","Pure Cotton",238,234,221],["L177","White Cheese",232,232,222],["8372","Spirit Wind",231,231,222],["8348","Cosmic Dust",228,227,214],["8404","Jade Isle",220,222,209],["8396","Virgin Mountain",238,236,231],["7220","Shy Iris",237,235,227],["8260","Camphor",237,239,227],["L118","Water Spray",238,238,223],["L120","Mint Lustre",239,239,222],["7668","Misty Meadow",233,238,219],["7676","Green Republic",232,238,219],["7660","Winter Nip",232,236,217],["7684","Repose",240,239,233],["L166","Sour Cream",236,236,228],["L171","White Silk",238,238,232],["L169","Spotless",234,235,228],["L108","Cream Pudding",235,237,226],["L185","Night Jasmine",230,231,217],["8388","Tranquil Green",232,238,225],["L117","Mint Essence",227,234,220],["947","Ocean Spray",240,239,234],["L163","Salt White",237,239,226],["L119","White Satin",235,237,228],["763","Iceland",235,238,228],["L112","White Echo",231,239,226],["L116","Menthol",224,231,224],["1205","Alpine",218,219,212],["8316","First Frost",219,220,214],["9484","Smooth Flow",240,238,232],["L162","Biennale White",232,232,226],["L186","Lap Of Himalaya",234,235,230],["7252","Blue Harmony",231,235,229],["7420","Sky Mimic",232,238,228],["L113","Seagull Point",226,237,223],["7556","Zen Mist",225,237,221],["7612","Barrier Reef",217,226,218],["8347","Ocean Cliffs",224,224,220],["8259","Ice Grey",223,229,225],["8276","Mirage White",228,232,225],["L111","Sheer Ice",227,236,228],["7492","Meadow Mist",228,237,225],["7572","Quiet Lake",226,236,225],["L115","White Bisque",221,236,222],["7588","Alpine Green",220,234,221],["7564","Summer Song",231,237,233],["L184","White Forest",225,227,225],["7236","Hill Crest",224,228,227],["7276","Brush Stroke",226,234,231],["7332","Snow Princess",225,237,230],["7444","Sail Boat",222,234,228],["7476","Bay Breeze",219,232,224],["7491","Mainstream",212,218,216],["977","Cool Crystal",231,236,235],["L181","White Sugar",226,232,229],["7300","Jet Stream",222,229,227],["7308","Surfs Up",224,234,230],["7348","Spring Dew",220,228,225],["7388","Spring Thaw",223,235,230],["7412","Whispering Breeze",223,237,230],["L114","Aqua Hint",209,232,226],["7460","Crystal River",228,229,228],["7228","Winter Morn",219,228,232],["7251","Fairytale",217,231,230],["7364","Star Gaze",217,229,227],["7372","Phantom Lake",212,228,230],["7347","Bird Bath",211,226,224],["7419","Caribbean Sky",209,227,227],["9228","Solitude",199,226,231],["7363","High Spirits",230,227,224],["7188","Lilac Breeze",234,234,233],["L180","Innocent White",236,230,228],["7156","Lavender Lace",233,230,232],["7172","Gem Stone",232,228,230],["7164","Delicate Violet",232,225,228],["7155","Pale Chiffon",231,226,233],["L187","Baby Orchid",225,219,229],["7163","Lavender Secret",239,234,230],["766","Purity",234,227,223],["8212","Mystic Sky",244,232,231],["8132","Pale Blush",235,221,218],["8700","Divinity",240,229,229],["9108","Iris Ice",242,231,231],["8148","Pink Seduction",238,224,227],["8172","Rosy View",237,222,228],["7115","Purple Dye",0,0,0],["9425","Outdoor Pink",236,190,217],["9417","Rose Essence",226,187,207],["9581","Mastani",225,165,202],["9416","Twilight Pink",215,134,176],["9583","Pink Panther",207,120,170],["9414","Pink Flower",176,89,135],["9584","Fervent Fuchsia",118,64,96],["9585","Acai Berry",243,236,233],["9428","Sky Pink",242,226,232],["9427","Delicate Pink",239,207,228],["9426","Candy Floss",220,160,203],["9424","Morning Rays",214,147,193],["9423","Soft Petals",204,121,176],["9422","Pink Water",153,66,100],["9421","Fabric Pink",109,67,88],["8165","Royal Satin",215,163,201],["9586","Zinnia Pink",201,131,182],["9587","Mauve Spring",187,123,177],["9588","Allium Bloom",176,106,159],["9589","Rich Rose",161,94,136],["9590","Mauve Marvel",118,83,117],["9591","Sweet Prune",113,71,106],["9592","Indigo Wine",106,71,92],["9101","Purple Verve",204,161,200],["9593","Pastell Rosa",185,135,183],["9594","True Violet",167,121,159],["9595","Mulled Berry",172,110,162],["9596","Cosmos Pink",149,93,143],["9597","Blue Plum",145,87,136],["9598","Onion Peel",117,71,115],["9599","Juniper Berries",100,64,94],["9600","Purple Margarita",231,208,226],["7114","Study In Scarlet",224,193,222],["7113","Tickled Pink",200,173,206],["9121","Dancing Pink",200,168,207],["7112","Wisteria",187,149,195],["7111","Japanese Lilac",170,126,178],["7110","Happy Hyacinth",143,88,142],["9601","Purple Martini",106,76,110],["7109","Iris Impact",202,177,218],["9602","Catmint Blossom",178,150,190],["9120","Pink Reserve",167,133,181],["9603","Orchidia",158,122,177],["9604","Queen",0,0,0],["9605","Gulabi Muscat",95,68,103],["9606","Purple Lore",101,71,99],["9607","Purple Galaxy",76,69,86],["9608","Regal Air",216,205,226],["9609","Lilac Tint",209,194,223],["K285","Lilac Linen",177,160,194],["9610","Lavender Lyric",153,127,169],["9611","Kadambari",119,94,134],["9612","Violet Streak",112,91,131],["9613","Aronia Purple",104,91,125],["9614","Purple Mystique",98,89,119],["9615","Thangjing",173,152,201],["9616","Wisteria Lane",165,132,185],["9617","Dianthus",115,97,141],["9618","Primrose Purple",101,97,149],["9619","Rajputana Purple",91,85,129],["9620","Saintpaulia Violet",83,73,119],["9621","Aurora Purple",86,75,98],["9622","True Indigo",80,65,92],["9623","Purple Gem",222,214,220],["7147","Lavender Laugh",207,197,209],["7146","Mauve Hint",195,183,199],["7145","Wisteria Wish",172,166,184],["7144","Italian Iris",116,111,127],["9624","Lilac Dusk",137,129,149],["7143","Purple Illusion",117,110,129],["7142","Vibrant Mauve",85,77,93],["9625","Blue Grape",224,215,225],["7154","Spring Bouquet",206,194,217],["7008","Caprice",187,177,205],["7152","Mount Olympus",160,151,186],["7151","Heirloom",151,140,181],["9626","Fuchsia Fiesta",136,125,163],["7150","Regal Jewel",94,80,108],["7149","Royal Mauve",83,70,91],["9627","Emperor'S Purple",220,215,218],["9139","Berry Shake",223,218,231],["9628","Fading Light",217,208,227],["7162","Quartz Illusion",202,192,223],["7161","Potpourri",180,173,212],["7160","Dash Of Purple",164,157,203],["7159","Velvet Night",130,122,176],["7158","Royal Robes",92,82,122],["9629","Violet Kick",213,210,223],["7171","Carefree Breeze",200,195,216],["7170","Misty Purple",198,195,220],["9630","Lilac Feather",181,180,205],["7051","Reverie",162,163,198],["7168","Orchid Bloom",155,157,196],["7167","Tiffany",125,124,171],["7166","Intense Purple",82,78,112],["7165","Dark Triumph",217,213,217],["7187","Lavender Sprig",205,201,209],["719","Gypsy Queen",188,183,195],["7185","Pallid Violet",167,167,180],["7184","Still Pond",140,140,156],["7183","Garden Beauty",110,108,123],["7182","Purple Pansy",80,77,85],["7181","Victorian Purple",71,69,79],["9631","Charcoal Plum",223,219,224],["7196","Soft Ballad",209,206,217],["7195","Cranberry Ice",188,185,203],["7194","Young Berry",163,165,185],["7193","Princess Purple",150,153,175],["7192","Senate Purple",124,125,147],["7191","Mulberry",108,109,132],["7190","Vintage Velvet",79,77,90],["7189","Lineage",225,223,227],["7204","First Ray",213,213,224],["7203","Delicate Doll",199,200,220],["7202","Purple Pride",159,164,198],["7201","Lined With Lilac",146,152,188],["7200","Royal Glimmer",128,135,173],["7199","Grape",115,121,159],["7198","Plum Berry",83,81,111],["7197","Rare Orchid",227,227,230],["7212","Natural Beauty",216,219,231],["7211","Innocence",200,206,228],["7210","Hyacinth Mist",186,194,225],["7209","Violet Pond",164,174,214],["7208","Petal Soft",140,152,201],["7207","Classic Purple",105,119,176],["7206","Purple Heart",82,87,141],["7205","Purple Chiffon",225,227,231],["7219","Pearly Gates",204,211,227],["7218","Beautiful Berry",199,205,231],["9632","Lilac Ribbon",184,195,226],["7217","Berry Blush",159,174,214],["7216","Edge Of Dawn",130,152,201],["7215","French Purple",106,127,183],["7214","Purple Robe",93,107,166],["9633","Bluebell Beauty",207,212,222],["7227","House Of Windsor",183,191,211],["7226","Violet Vista",159,169,194],["7225","Purple Shell",136,150,177],["7224","Rum & Raisin",116,130,159],["7223","Grape Shake",102,116,146],["7222","Mountain Vale",83,102,132],["9634","Convent Blue",69,80,105],["9635","Ganges Midnight",213,218,220],["7235","Dusky Iris",194,201,209],["720","Oracle",176,186,200],["7233","Ice Cube",158,169,185],["7232","Thunder",128,141,160],["7231","Pale Orchid",98,107,125],["7230","Energy",61,66,85],["9636","Ladakh Nights",72,76,86],["7229","Pantry Plum",89,129,182],["9637","Placid Blue",95,121,180],["9638","Eastern Bluebird",84,112,169],["9639","Columbine Bloom",73,104,158],["9640","Istanbul Blue",66,79,129],["9641","Delphinium Bloom",59,79,125],["9642","Sharp Navy",65,82,115],["9643","Sailor",0,0,0],["9644","Monsoon Midnight",223,230,238],["9645","Stratos",206,222,234],["9646","Blue Cloud",196,215,230],["7250","Pool Party",168,196,226],["7249","Morning Sky",148,179,216],["7248","Blue Charm",115,155,203],["7247","Blue Glory",80,123,178],["7246","Ink Blue",48,91,144],["9647","Naval Club",198,214,225],["7275","Blue Dawn",175,200,221],["7274","Summer Sky",162,191,217],["7273","Scuba Blue",150,178,207],["7272","Washed Indigo",122,157,194],["7271","Blue Pottery",90,129,169],["1218","Blue Clover",46,82,130],["1306","Oriental Blue",62,65,88],["9648","Deep Denim",161,197,229],["9649","Dove Blue",114,148,179],["9650","Lake Grey",94,130,168],["9150","Lucky Sapphire",64,126,182],["9651","Pangong Blue",61,105,146],["9652","Persian Pottery",38,99,142],["9653","Cairo Blue",42,86,132],["9654","Cobalt Hit",67,80,95],["7221","Grand Grape",200,217,225],["1243","Classic",182,206,219],["7298","Sail Away",160,192,212],["7297","Blissful Blue",133,168,192],["7296","Far Horizons",111,149,178],["7295","Picture Perfect",76,115,144],["7294","Caspian Sea",61,76,96],["7293","Mystic Dream",56,66,81],["9655","Night Swimming",200,217,223],["1276","Gentle Blue",171,198,214],["7306","Quiet Refuge",143,173,193],["7305","Corsican Sky",108,144,169],["7304","Piece Of Sky",91,126,152],["7303","Stormy Sea",82,115,140],["7302","Pleasant Lake",86,115,133],["9182","Lost Blue",64,79,98],["7301","Pluto",195,225,234],["9656","Gulmarg Winters",169,211,231],["7330","Young Boy Blue",139,197,227],["7329","Blue Bay",43,136,190],["7326","Soothing Sapphire",44,127,178],["9657","Empty Sky",39,92,145],["7325","Twilight Zone",48,97,148],["9658","Pacifica",64,77,105],["9659","Nightfall",196,222,232],["7331","Light Sky",186,215,226],["7346","Young Bloom",149,197,220],["7345","Splash",134,184,209],["7344","Gauguin Blue",97,159,190],["7343","Firmament",67,134,168],["7342","Waikiki",40,91,121],["9660","Lake Sapphire",52,85,110],["7341","Prussian Blue",164,212,227],["7362","Sky Watch",130,197,221],["7361","Morning Frost",117,200,228],["9661","Costa Brava",120,186,212],["7360","Blue Curacao",68,167,207],["9662","Dayflower Blue",35,140,176],["7358","Hidden Springs",13,100,138],["9663","Peacock Crest",38,93,122],["7357","Emphasis",184,210,218],["7371","Water Rapids",162,197,210],["7370","Sea Ridge",150,189,204],["7369","Harbor Fog",126,165,183],["7368","Thunder Bay",102,143,163],["7367","Storm Blue",89,142,162],["9223","Deep Water",72,110,129],["7366","Ashberry",49,86,107],["9664","Stormy Night",198,215,217],["1203","Alliance",185,200,200],["9474","Sea Shades",181,206,211],["7386","Blank Slate",165,192,197],["7385","Brazen Breeze",148,176,184],["7384","Dolphin Dance",119,150,160],["0U","42 Wedgewood",87,116,125],["7382","Dusk Blue",64,73,78],["7381","Autumn Shower",171,218,233],["9210","Soft Blue",120,198,230],["9209","Water Jet",85,186,222],["9665","Electric Azure",7,139,190],["9666","Dal Lake Blue",29,115,157],["9668","Blackwater",63,82,107],["9669","New Moon Sky",53,72,90],["0U","29 Armada",212,232,233],["9211","Spring Time",196,227,230],["7411","Nautilus",157,214,226],["7410","New Day",123,203,221],["7409","Paradise Bay",87,185,209],["7408","Running Stream",42,171,200],["7407","Azure Sky",0,150,180],["7406","Citadel",0,99,125],["7405","Blue Dome",188,228,236],["9670","Suhana Mausam",73,182,202],["9671","Ocean Electric",38,138,165],["9672","Yacht Blue",0,123,152],["9673","Blue Ripple",0,123,161],["9674","Caspian Waters",48,116,144],["9675","Iznik Blue",25,112,140],["9676","Night Dive",58,101,122],["9677","Inky Sky",142,211,233],["9678","Varkala Surf",89,168,184],["9679","Little Andaman",0,145,174],["9680","Retro Blue",0,136,163],["9681","Refreshing Aqua",0,125,149],["9682","Adriatic Waters",42,96,113],["9683","Blue Quill",43,89,113],["9684","Moonlight River",58,81,100],["9685","Scholar'S Blue",183,211,214],["7418","City Sky",161,197,205],["195","Manor Blue",146,182,191],["7416","Tropical Sea",112,156,167],["7415","Steel Mesh",58,128,143],["9686","Coromandel Coast",81,125,135],["7414","Isle Of Capri",64,93,100],["7413","Deep Sea",48,85,97],["9687","Pensive Prussian",207,230,229],["7436","Oceans Whisper",190,226,227],["7435","Mint Blue",165,217,223],["1319","Rhine Blue",138,206,218],["122","Pigeon Blue",119,193,207],["7432","Blue Vision",81,174,193],["7431","Patch Of Blue",9,144,164],["7430","Dream Scapes",50,87,102],["7429","Night Edition",192,232,231],["9688","Asmani",158,220,223],["7442","Sea Surf",128,209,217],["7441","Magic Blue",110,198,208],["7440","Swan Song",45,177,190],["7439","Twilight Sea",0,129,149],["9689","Cape Town",0,100,122],["9690","Dancing Peacock",53,75,86],["9691","Shadow",192,227,222],["7459","Foliage Blue",167,219,218],["7458","Mauritius",139,207,209],["7457","Pleasant Blue",125,196,198],["7456","Aqua Shower",83,172,175],["7455","Maritime Green",46,147,149],["7454","Deep Teal",0,122,125],["9692","Signature Teal",25,106,109],["7453","Elm Grove",173,225,226],["9693","Silent Cyan",148,216,218],["9694","Pure Sky",99,196,199],["9695","Glacial Lake",0,151,155],["9696","Fiji Fling",0,139,149],["9697","Ajrakh Blue",18,126,136],["9698","Vanuatu Blue",0,110,118],["9699","Hokkaido Coast",35,95,105],["9700","Prussian Teal",132,211,212],["9701","Cool Cirrus",59,191,194],["9702","Serene Cyan",58,180,185],["9703","Hawaiian Blue",0,147,150],["9704","Lake Supreme",0,136,139],["9705","Tidal Waters",0,132,144],["9706","Aqua Love",0,121,138],["9707","Island Retreat",0,107,124],["9708","Sylvan Lake",208,228,222],["7475","Sea Horse",176,207,204],["7474","Sapphire Ice",148,197,197],["7473","Coastal View",131,177,181],["7472","Vitality",110,161,168],["9709","Crystal Reef",105,159,163],["7471","Prairie Green",72,124,128],["7470","Teal Magic",59,88,92],["7469","Reef Green",199,220,214],["7483","Iced Teal",181,209,205],["7482","Sparkling Water",158,195,191],["7481","Teal Swirl",132,168,168],["7480","Still Aqua",113,150,150],["7479","Continental Green",114,148,146],["9710","Ash Blue",84,118,117],["7478","Malabar Hills",62,91,90],["9711","Estuarine",186,221,214],["7490","Gulf Of Aden",162,209,205],["7489","Revival Green",148,196,193],["7488","Tidal Wave",112,177,177],["9712","Pristine Bay",101,160,155],["7487","Still Blue",75,136,131],["7486","Green Tropics",43,103,100],["9713","Mystic Mountain",43,93,95],["7485","Thicket",210,236,228],["7508","Subtle Green",194,232,226],["7507","Baby Aqua",168,227,222],["7506","Aqua Fusion",132,217,213],["7505","Turquoise Treat",114,206,203],["7504","Ocean Breeze",49,187,183],["7503","Teal Blast",0,168,160],["7502","Emerald Satin",0,111,105],["7501","Deep Turquoise",198,230,228],["7443","Inner Peace",143,218,205],["9714","Vagator Surf",64,196,176],["9271","Herbal Green",61,184,165],["9715","Cyan Sigh",68,150,145],["9716","Deep Lagoon",0,147,142],["9717","Cool Cove",0,118,115],["9718","Aquatica",55,95,94],["9719","Ocean Notion",209,235,225],["7516","Fresh Mint",192,233,224],["7515","Green Icicle",168,228,219],["7514","Marine Green",130,217,207],["7513","Translucent Green",99,204,195],["7512","Caribbean Green",51,189,178],["7511","Valley Green",0,170,155],["7510","Bright Jade",0,115,100],["7509","Emerald Accent",190,222,213],["9266","Soft Hills",147,218,202],["9281","Fairytale Green",114,206,192],["9720","Havelock Green",0,160,140],["9721","Marari Waters",0,145,136],["9722","Malibu Green",0,132,125],["9723","Deep Atlantic",0,121,110],["9724","Barnacle Bay",51,81,82],["7477","Cool Lagoon",208,232,223],["7532","Valley Mist",193,228,219],["7531","Blue Light",170,220,209],["7530","Mint Cocktail",159,214,203],["7529","Sea Life",131,192,185],["7528","Green Meadow",102,174,165],["7527","Green Haven",67,145,134],["7526","Jade Impact",38,106,97],["7525","Perennial Glade",207,231,220],["210","Cascade",192,225,211],["7547","Mint Crush",175,216,203],["7546","Climbing Fern",153,204,190],["7545","Wild Mint",135,186,174],["7544","Elf Green",107,166,153],["7543","Jade Hut",78,133,118],["7542","Emerald Valley",54,111,100],["9725","Billiard Felt",82,194,175],["9726","Cyan Spark",64,167,156],["9727","Laccadive",0,152,131],["9728","Opalesque",0,132,113],["9729","Ocean Depths",10,115,105],["9730","Green Rock",22,105,97],["9731","Oceanus",42,98,86],["9732","Midnight Jade",51,74,64],["9733","Emerald Black",99,159,131],["9734","Kodaikanal Teal",63,159,134],["9735","Blue Lagoon",0,147,107],["9736","Putting Green",0,150,118],["9737","Aquamarine Pop",0,137,108],["9738","Shifting Tide",21,121,103],["9739","Emerald Sea",0,121,105],["9740","Bright Teal",52,90,82],["7541","Meadow Path",200,232,217],["7555","Teal Twist",172,227,210],["7554","Lotus Pond",139,215,194],["7553","Snow Bell",126,203,182],["7552","Light Sabre",101,189,167],["7551","Ice Cabbage",54,164,132],["7550","Country Green",0,128,98],["9741","Varsity Green",17,103,87],["9742","Teal Dusk",210,230,216],["7563","Dawn Of Spring",183,217,200],["7562","Sea Nymph",163,206,188],["7561","Lake View",139,184,166],["7560","Laguna Beach",116,164,145],["7559","Conifer",88,135,113],["7558","White Wine",62,95,85],["7557","Deep Jungle",54,87,74],["9743","Drones Club Green",135,172,170],["9744","Malhaar",119,165,155],["9745","Chilika Lake",107,148,136],["9746","Mallard",0,0,0],["9286","Serenade",82,130,105],["9747","Himalayan Deodar",48,121,90],["9748","Nori Green",62,109,89],["9749","Aventurine",50,81,66],["9750","Duck Plume",210,236,208],["9751","Wispy Mint",135,198,151],["9752","Mint Moon",117,196,141],["9311","Lime Life",41,163,95],["9753","Lightning Green",51,133,92],["9754","Halong Bay",47,128,91],["9755","Pine Lake",39,117,94],["7549","Green Lantern",47,78,66],["9756","Barsaat",211,236,222],["7571","Soft Touch",182,231,206],["9298","Exotic Spa",176,230,208],["7570","Paddy Field",152,223,196],["7569","Iced Kiwi",133,216,182],["9757","Maya Bay",136,212,183],["266","Surf Green",95,193,155],["2357","Aquamarine",13,139,90],["7565","Jungle Trail",219,238,222],["9308","Spring Green",211,230,214],["0G","23 Waterfall",195,222,204],["7586","Spring Meadow",173,210,188],["7585","Ivy League",152,190,168],["7584","Poplar Grove",119,163,138],["7583","Natural Tease",102,143,116],["7582","Green Sprouts",75,107,90],["757","Pine",222,240,219],["9758","Mint Frosting",217,229,213],["2425","Green Whisper",200,220,201],["299","Dew Drop",180,208,183],["7625","Forest Hike",162,191,166],["7624","Dry Sage",136,166,139],["2463","Opaline Green",111,141,110],["7622","Olive Path",90,109,82],["2361","Mehendi",208,234,212],["7611","Ice Pack",181,225,197],["7610","Land'S End",164,219,186],["7609","Green Pastures",151,204,167],["7608","Forest Canopy",119,185,139],["7607","Terrace Garden",96,161,108],["7606","Little Creek",65,141,80],["9759","Pingpong Green",67,104,77],["9760","Tropical Grass",209,240,206],["9761","Celadon Mist",140,196,125],["9762","Pastel Parrot",79,139,59],["9763","Mowed Lawn",74,131,72],["9764","Chalkboard Green",67,125,76],["2435","Jade Green",51,126,77],["9765","Rainforest Walk",63,101,85],["9766","Jade Shadow",51,83,77],["9767","Midnight Pine",226,237,213],["7659","Flowing Green",212,232,196],["7658","Misty Spring",193,227,182],["7657","Iced Cucumber",181,220,165],["7656","Forest Whisper",149,204,132],["7655","Amazon Trail",123,187,99],["7654","Seasoning",107,165,77],["9768","Happy Parrot",81,158,64],["7653","Jolly Holly",234,237,214],["7667","Forest Musk",230,236,206],["7666","Grassy Path",225,236,190],["9769","Easy Breezy",208,229,178],["7665","Crisp Lettuce",194,221,159],["7664","Sage Sensation",172,212,132],["7663","Aloe Vera",148,194,97],["7662","Hidden Hills",116,171,55],["7661","Parrot Green",205,236,183],["9770","Pale Peppermint",188,219,149],["9771","Fresh Celery",177,210,122],["9772","Palm Meadow",151,193,91],["9773","Matcha Muffin",107,161,61],["9774","Lush Treetops",87,145,75],["9775","Tulsi",80,118,72],["9776","Turtle Cove",91,118,76],["9777","Turtle Back",211,237,185],["9778","Matchamisu",213,232,170],["9779","Cucumber Cooler",171,196,127],["9780","Green Elaichi",128,150,71],["9781","Veggie Patch",123,141,60],["9782","Greenology",85,128,72],["9783","Rocket Leaf",79,112,71],["9784","Nilgiri Green",79,95,61],["9785","Midnight Meadow",230,242,208],["9786","Green Dawn",204,228,170],["9787","Menthol Ice",127,144,73],["9788","Cornichon",111,142,84],["9789","Fresh Coriander",118,128,66],["9790","Pesto Punch",93,114,64],["9791","Poker Table",85,107,82],["X157","Green Ebony",76,96,73],["9792","Withering Woods",229,236,213],["7675","Serene Valley",214,229,194],["7674","Echo Of Spring",199,219,177],["2387","English Elms",188,209,161],["7672","Sound Of Nature",158,188,131],["2370","Cascade Green",137,167,99],["7670","Garden Cress",119,151,72],["9793","Easy Peasy",109,139,70],["7669","Gulf Stream",225,232,211],["946","Misty Vale",212,224,198],["7682","Spring Fields",201,215,185],["2420","Green Sleeves",185,202,169],["7680","River Cruise",158,179,139],["7679","Lake Placid",128,150,104],["7678","Batik Green",95,117,73],["7677","Dark Drama",86,99,75],["9794","Nocturnal Woods",227,229,209],["972","Tapestry",215,220,196],["7691","Tree Of Life",202,210,180],["7690","Forest Foliage",178,186,154],["7689","Garden Moss",159,169,135],["7688","Majestic Mountain",147,153,115],["7687","Cedar Lake",131,138,103],["7686","Scenic View",110,115,79],["7685","Ming Jade",240,239,218],["7716","Lemon Twist",235,235,209],["7715","Luminous",232,235,199],["2467","Peace",220,228,179],["7713","Lime Squash",204,214,154],["7712","Snappy Green",184,199,125],["7711","Lick Of Lime",165,183,93],["7710","Green Apple",136,159,63],["7709","Chartreuse",235,235,214],["7724","New Green",232,231,204],["7723","Spring Breeze",217,218,181],["7722","Glimpse Of Spring",209,211,169],["7721","Pale Moss",196,196,153],["7720","Habitat",173,174,124],["7719","Spring Grass",147,148,93],["7718","Spinach Soul",134,132,76],["7717","Vivid Green",235,235,211],["7732","Soft Fern",231,233,202],["2353","Alto",223,228,188],["7730","Green Tomato",214,221,173],["7729","Lime Grove",199,206,150],["7728","Spring Surprise",180,191,126],["7727","Lime Accent",160,171,95],["7726","Green Salad",129,144,65],["7725","Fresh Olive",226,238,201],["9795","Lemongrass Tea",209,224,154],["9353","Pristine Green",203,228,155],["9796","Subtle Celery",195,215,126],["9352","Easy Green",188,215,118],["9797","Green Shoot",165,179,50],["9798","Lozenge Green",157,170,56],["9799","Summer Lawn",114,133,68],["9800","Open Fields",237,241,215],["9801","Gossamer Green",211,227,136],["9802","Lime Sublime",192,209,73],["9803","Mild Midori",136,153,59],["9804","Leafy Lettuce",124,133,77],["9805","Wild Foliage",105,124,71],["9806","Okra Green",98,110,60],["9807","Super Kale",102,110,67],["9808","Soldier Green",236,241,204],["9809","Chinese Cabbage",202,219,143],["9810","Pista Lime",201,218,112],["9811","Casaba Green",180,187,46],["9812","Parakeet Green",111,125,57],["9813","Dark Spinach",89,102,60],["9814","Tea Bush",85,93,60],["9815","Montane Forest",63,83,64],["9816","Forest Night",239,243,212],["9817","Tinted Pista",213,220,130],["9818","Guacamole Zing",192,208,94],["9819","Peas Soup",170,188,55],["9820","Polly",0,0,0],["9821","French Bean",131,143,71],["9822","Fern Garden",130,136,58],["9823","Herbalicious",96,100,59],["9824","Wimbledon Green",226,230,172],["9825","Pista Tinge",221,217,141],["K286","Avocado Cooler",203,215,98],["9826","Citrus Green",193,203,72],["9827","Draksha Baug",174,177,52],["9828","Green Fern",159,164,59],["9829","Vine Green",144,149,62],["9830","Spinach Soup",116,125,73],["9831","Dried Parsley",241,239,215],["7748","Soft Focus",239,238,206],["7747","Lemon Grass",236,234,192],["7746","Wedge Of Lime",231,233,179],["7745","Cucumber Salad",223,226,157],["7744","Lime Delight",207,216,121],["7743","Peppy Lime",186,204,81],["7742","Burst Of Lime",168,193,79],["9832","Banana Leaf",216,226,157],["9833","Pleasant Pistachio",205,207,99],["9834","Gooseberry Green",200,205,59],["9835","Ne",0,0,0],["9836","Dried Lime",183,182,57],["9837","Lime And Lemony",173,166,67],["9838","Wasabi Pea",159,151,60],["9839","Chlorophyll Shot",116,110,63],["9840","Martini Olive",202,186,112],["9841","Aniseed Green",190,181,124],["9383","Sultry",168,169,106],["9842","Mint Mayonnaise",172,160,60],["9843","Midday Meadow",148,139,58],["9844","Mangrove",106,110,61],["9845","Fresh Cilantro",98,105,70],["9846","Herb Paste",96,96,64],["9847","Grasslands",239,236,208],["7772","Burst Of Spring",238,235,200],["7771","Hushed Hue",232,229,185],["7770","Springdale",230,225,175],["7769","Green Glade",215,211,147],["7768","Calm Fauna",204,201,125],["7767","Harvest Season",180,179,89],["7766","Organic Green",160,158,59],["7765","Golf Greens",241,240,212],["9364","Spring Sunshine",234,219,117],["9848","Nimboo Splash",223,209,98],["K287","Summer Juice",208,190,52],["9849","Spring Summer",185,165,53],["9850","Muddy Mustard",189,173,52],["9851","Lucky Leek",154,137,62],["9852","Moong Green",98,89,60],["9853","Moss Mud",241,237,210],["7780","Green Wisp",238,233,196],["7779","Lakeshore",234,232,186],["7778","Limon",225,222,157],["7777","Fresh Sprout",225,221,132],["7776","Neon Light",221,216,111],["7775","Tech Green",214,213,110],["9854","Sour Grapes",194,196,88],["9366","Dropping Leaves",231,228,207],["7788","Lily Pad",223,220,195],["7787","Spring Frolic",205,203,170],["7786","Cliffside",187,184,153],["7785","Safari Green",172,168,133],["7784","Diced Olive",159,153,114],["2430","Henna",140,136,97],["342","Green Gold",118,114,78],["7781","Garland",231,226,203],["3165","Ivory Coast",225,219,190],["262","Venetian Green",210,204,166],["758","Sweet Lime",190,183,146],["7793","Jungle Cane",170,161,122],["7792","Camelot",158,147,103],["7791","Retro Avocado",143,133,92],["7790","Bambi Beige",127,118,77],["254","Autumn Gold",237,231,203],["7812","White Marsh",233,225,189],["3226","Touch Of Spring",223,214,169],["7810","Dry Moss",208,195,143],["7809","Chinese Tea",191,178,120],["7808","Young Green",180,164,100],["7807","Sweet Celery",166,152,88],["7806","Greenery",154,139,74],["7805","Asparagus",239,230,191],["7827","Stately Garden",236,225,178],["7826","Hermit Shack",225,214,155],["7825","Meadow Grass",217,203,135],["7824","Garden Frolic",213,198,124],["7823","Italian Olive",194,178,93],["7822","Spring Beauty",161,149,62],["7821","Kitchen Garden",128,126,60],["9855","Bamboo Green",235,217,129],["9856","Herb Butter",225,196,50],["9857","Lime Burst",170,147,66],["9858","Mossy Ground",163,134,49],["9859","Relish Green",147,122,54],["9860","Gherkin Green",132,119,60],["9861","Raw Mango",117,107,59],["9862","Pickled Olive",102,98,61],["9863","Verde Oliva",247,240,216],["7835","Cream Caress",249,239,200],["7834","Gold Gleam",249,236,185],["7833","Sunkissed",244,225,153],["7832","Golden Apple",237,205,97],["7830","Lemonade",209,172,46],["9864","Yellow Moss",178,146,45],["9865","Coconut Palm",149,129,58],["9866","Indian Olive",242,237,215],["7844","Mild Yellow",243,234,207],["7843","Margarine",241,231,197],["7842","Yellow Synergy",237,222,177],["7841","Corn Field",223,206,153],["7840","Divine Wine",210,191,128],["7839","Musk Melon",189,166,93],["7838","Green Beret",163,142,65],["7837","Salmon Green",241,234,214],["943","Jasmine Wisp",233,222,193],["3119","Cashmere",226,212,179],["7850","Banana Cream",210,196,159],["7849","Pebble Moss",195,179,139],["0G","15 Countryside",181,165,116],["7847","Ginger Ale",163,147,98],["7846","Olive Oil",129,115,68],["7845","Green Lawns",240,233,202],["7828","Spirit Island",240,213,121],["7831","Brazen Gold",242,209,111],["9867","Mosambi Yellow",208,166,31],["9868","Lentil Yellow",190,153,51],["9869","Green Warbler",178,136,62],["9870","Mulligatawny",164,128,57],["9871","Oatmeal",159,128,72],["9872","Olive Tapenade",245,236,208],["7859","Lemon Pie",245,233,196],["7858","Lime N' Honey",244,228,177],["7857","Yellow Suds",236,215,152],["7856","Goldilocks",234,209,138],["9873","Pale Cardamom",226,202,126],["7855","Inca Ruins",210,181,87],["7854","Sea Kelp",190,160,62],["7853","Open Range",247,242,218],["7868","Sun Screen",248,240,207],["7867","Summer Dew",249,239,196],["7866","Butter Scotch",252,236,179],["7865","Wild Yellow",254,231,149],["7864","Lemon Burst",254,226,123],["7863","Summer Yellow",242,209,93],["9874","Tangerine Yellow",241,200,58],["9875","Lazy Daisy",247,242,222],["7876","Soft Honey",248,241,213],["7875","Dollop",249,233,192],["7874","Sunny Sands",253,235,183],["7873","Lemon Sprig",254,228,149],["7872","Saffron Smile",254,220,116],["9876","Happy Canary",254,215,116],["7871","Mid-Day",245,203,90],["9877","Yellow Blossom",249,240,216],["7884","Soft Linen",249,238,206],["7883","Whipped Cream",244,224,180],["7882","Solemn Yellow",242,216,163],["399","Pineapple",235,203,142],["7880","Honey Mustard",219,177,99],["7879","Natural Tinge",207,164,82],["7878","Sun Shadow",190,149,64],["7877","Ripe Olive",243,232,209],["7892","Pale Ivory",228,203,161],["9878","Bamboo Straw",226,189,137],["9879","Sands Of Thar",212,174,112],["9880","Jaiphal Dust",168,124,70],["9881","Wholegrain Mustard",168,129,74],["9882","Coffee Almond",134,102,61],["9883","Dark Almond",124,91,58],["9884","Dried Anjeer",240,223,190],["7891","Wheat Sprig",237,214,171],["7890","Sisal Mat",227,199,152],["358","Mid Cream",211,177,122],["7888","Ginger Root",198,162,101],["7887","Pine Cone",189,151,89],["7886","Botanica",169,131,69],["7885","Gold Mine",124,94,57],["9885","Military Boots",247,240,215],["7900","Candle Light",249,238,204],["7899","Subtle Tint",252,237,191],["7898","Autumn Valley",253,234,181],["7897","Cream Custard",253,217,139],["7896","Sunlit Sand",250,208,116],["7895","Tons Of Sun",249,196,85],["7894","Sunny Day",204,153,63],["K288","Mrig",245,238,215],["7908","Evening Moon",246,235,205],["7907","Candle Wick",248,233,193],["7906","Eager Yellow",250,228,174],["7905","Peeping Sun",251,218,151],["7904","Morning Dream",249,206,118],["7903","Maize Stalk",246,190,84],["7902","Cheeky Yellow",196,148,59],["9886","Mustard Wood",247,236,211],["7924","Moon Year",250,239,211],["7915","Liquid Light",252,235,192],["7914","Sundrenched",254,232,178],["7913","Golden Aura",254,225,157],["7912","Yellow Tulip",254,221,134],["9887","Creme Anglaise",254,216,122],["7911","Ski Valley",237,180,56],["9888","Billboard Yellow",250,234,201],["7923","Summer Sprinkle",254,231,188],["7922","Wild Honey",254,221,162],["7921","Summer Harvest",254,209,140],["7920","Yellow Metal",254,194,103],["7919","Burnished Sun",247,175,67],["7918","Empire Yellow",237,164,46],["9889","Bengal Gram",211,153,60],["9890","Jaisalmer",246,234,210],["7931","Shredded Wheat",250,228,188],["7930","Hearth",251,221,169],["7929","Raffia",248,208,150],["7928","Sun Dial",241,188,112],["9891","Chandan",239,189,116],["7927","Casablanca",226,167,84],["7926","Light Ochre",210,149,60],["7925","True Ochre",245,233,211],["7939","Yellow Gleam",248,225,190],["7938","Desert Sun",248,214,166],["7937","Yellow Iris",238,192,136],["7936","Hacienda Clay",231,178,116],["7935","Yellow Charm",217,158,87],["7934","Grains Of Sand",202,140,68],["7933","Earthen Mix",167,117,72],["K289","Pretzels",250,235,201],["7947","Corn Cob",254,231,186],["7946","Sunny Side Up",254,227,168],["7945","Yellow Scoop",254,217,143],["7944","Sunspot",254,201,103],["7943","Bright Fire",254,187,57],["7942","Lily Gold",254,183,59],["9892","Sunny Pumpkin",242,156,50],["9893","Hobakjuk Yellow",254,209,148],["9894","Shea Butter Gold",254,202,116],["9895","Jackfruit Yellow",254,191,105],["9896","Marigold Garland",250,170,38],["9897","Afternoon Glow",232,145,37],["9898","Orange Grove",203,133,54],["9899","Mustard Orange",194,122,60],["9900","Dusky Tan",162,101,62],["9901","Rustic Earth",248,237,213],["7956","Honey Dew",251,233,199],["7955","Cream Silk",252,226,187],["7954","Dreamsicle",254,221,169],["7953","Fairy Glitter",254,206,139],["7952","Martian Sky",254,186,94],["7951","Orange Spark",254,160,28],["7949","Orange Appeal",211,139,54],["9902","Golden Slumber",248,238,217],["7964","Custard Apple",251,235,206],["7963","Light Chrome",251,227,189],["7962","Kesar Milk",254,217,161],["7961","Peaches And Cream",254,200,130],["7960","Mango Shake",254,185,105],["7959","Orange Crush",254,168,68],["7958","Pumpkin Harvest",219,142,59],["9903","Mellow Melon",250,236,213],["7971","Peach Melba",252,222,187],["7970","Nacho Cheese",253,214,171],["7969","Coral Beach",245,192,144],["7968","Milk Toffee",239,178,124],["7967","Warm Glow",223,151,88],["7966","Walnut Shell",201,125,65],["7965","Rich Tan",169,99,57],["9904","Butterscotch Nut",247,235,215],["7980","Sand Bed",250,232,206],["7979","Apricot Illusion",253,228,194],["7978","Orange Frost",254,219,176],["7977","Mango Duet",254,204,152],["7976","Sunset Cloud",254,175,108],["7975","Roasted Sesame",211,126,53],["9905","Marmalade Toast",171,111,68],["9906","Aravalli Rocks",252,218,183],["7986","Marigold",252,209,167],["7985","Fossil",249,195,148],["7984","Sun-N-Sand",239,171,119],["7983","Canyon Sun",231,151,91],["7982","Mecca Gold",215,129,67],["7981","Dusky Saffron",185,105,55],["9907","Caramel Sauce",150,89,64],["9908","Nut Roast",252,226,203],["9909","Hint Of Peach",254,189,142],["9910","Peach Pie",252,175,131],["9911","Pale Pawpaw",221,153,105],["9912","Terracotta Gold",197,116,57],["9913","Baked Ochre",168,102,63],["9914","Roasted Almond",137,89,73],["9915","Red Ant",110,75,69],["9916","Lavang",254,211,166],["9917","Peachy Glow",254,185,123],["9918","Posh Peach",254,175,119],["9919","Mango Mastani",213,130,92],["9920","Deccan Earth",211,110,68],["9921","Orange Tan",200,105,65],["9922","Tic Tac Tan",175,94,63],["9923","Amber Teak",151,79,71],["9924","Pecan Pie",254,205,168],["9925","Sandalwood Skin",254,194,148],["9926","Ginger Meringue",253,175,126],["9927","Radiant Peony",182,113,90],["9928","Nutmeg Sprinkle",155,99,78],["9929","Burnished Earth",139,84,63],["9930","Muffin Crust",130,88,73],["9931","Toffee Almond",123,89,79],["9932","Walnut Bark",254,208,173],["9933","Peach Petal",254,203,156],["9934","Sunshine Peach",254,196,142],["9935","Nectarine Blush",254,188,133],["9936","Peach Bellini",199,105,68],["9937","Red Rust",169,93,77],["9938","Laterite Brown",122,81,68],["9939","Brown Seed",102,75,67],["9940","Pinyon Pine",200,121,73],["9941","Mehrangarh Brown",200,115,58],["9942","Roland Gaross",173,99,58],["9943","Earthen Hue",168,103,75],["9944","Burnt Saffron",162,88,63],["9945","Muted Auburn",134,78,67],["9946","Mahogany Bay",127,74,70],["9947","Rhode Island Red",117,64,65],["9948","Winery",252,233,212],["7995","Simply Sunset",254,227,201],["7994","Peach Rose",254,214,180],["7993","Melon Sorbet",254,190,152],["7992","Sunset Beach",254,165,120],["7991","Autumn Pumpkin",248,142,88],["7990","Vivid Orange",212,110,61],["9949","Roasted Orange",131,84,66],["9950","Mudpie",249,233,216],["8003","Pale Dawn",252,216,190],["8002","Bashful Beige",253,204,174],["8001","Peach Flutter",248,181,146],["8000","Perfect Peach",240,162,124],["7999","Orange Silk",230,141,96],["7998","String Of Beads",203,108,66],["7997","Deep Spice",183,96,56],["9951","Simple Sienna",248,220,197],["8011","Flawless Peach",248,209,181],["8010","Peach Beach",244,198,169],["8009","Orange Essence",238,178,149],["8008","Stoneware",225,154,121],["8007","Fawn Dream",205,123,89],["578","Volcano",172,100,74],["8005","Earthy Brown",154,83,61],["9952","Rich Teak",247,220,198],["8019","Coral Rocks",244,204,177],["8018","Exotic Spice",239,190,159],["8017","Peach Carnation",220,160,130],["8016","Coral Coast",207,143,113],["8015","Grand Canyon",185,117,85],["5103","Amber",172,102,73],["8013","Copper Moon",150,92,75],["9953","Derby Day",169,102,85],["9954","Ginger Tan",161,104,94],["9955","Cappadocia Coffee",158,92,75],["9956","Saddle Hide",148,81,63],["9957","Caramello",131,82,66],["9958","Dried Arecanut",131,78,66],["9959","Acorn Shell",117,77,70],["9960","Ripe Tamarind",109,68,67],["9961","Cherry Brown",253,209,188],["9962","Rosy Peach",250,201,173],["9963","Sunrise Ray",252,195,161],["9964","Daisy Peach",247,176,147],["9965","Salmon Sun",245,161,129],["9966","Coral Pearl",221,144,129],["9967","Faded Salmon",194,101,85],["9968","Litchi Skin",175,97,86],["9969","Cherry Tan",251,231,215],["8027","Touch Of Paprika",254,221,201],["8026","Daylight",254,209,185],["8025","Popsicle",253,182,156],["8024","Orange Nectar",247,158,129],["8023","Carrot Punch",242,132,95],["8022","Tropical Peach",217,109,77],["9970","Saffron Sun",184,96,62],["9971","Russet Tan",251,226,214],["8035","Rose Bud",251,212,198],["8034","Pink Bib",249,197,181],["8033","Pink Crush",243,179,165],["8032","Sugared Peach",236,157,141],["8031","Rosy Coral",220,127,105],["8030","Coral Cove",185,88,75],["8029","Red Earth",171,102,90],["9972","Tea Rose Blossom",181,95,73],["9973","Red Fort Sunset",165,90,76],["9974","Ginger Hair",163,84,68],["9975","Autumnal Brown",163,92,85],["9976","Minaret Red",146,81,73],["9977","Cherry Leather",144,81,79],["9978","Viva La Vino",122,69,67],["9979","Sienna Cobble",105,62,63],["9980","Fig Shell",212,79,69],["8061","Salsa",194,76,66],["9981","Scarlet Sun",192,95,84],["9982","Russet Rust",183,94,86],["9983","Brick Dust",162,81,81],["9984","Rich Prune",144,80,76],["9985","Burgundy Brown",141,74,71],["9986","Lhasa Temple",113,63,60],["9987","Fizzy Cola",249,225,217],["8051","Crimson Flush",253,216,208],["8050","Rosette",250,201,193],["8049","Rose Glow",249,175,169],["5206","Pale Rose",243,150,143],["8047","Jaipur Dreams",237,126,113],["8046","Coral Island",203,103,85],["9988","Rich Maple",154,84,76],["9989","Ladakh Rock",230,171,155],["9990","Macaroon Pink",244,160,148],["9991","Aboli",238,132,134],["9992","Guava Pink",208,97,102],["9993","Coral Blush",180,82,89],["9994","Moroccan Rose",155,73,81],["9995","Bordeaux Burgundy",142,80,84],["9996","Deep Rosewood",112,62,65],["9997","Maroon Mood",247,221,216],["8059","Pink Flamingo",250,205,202],["8058","Nursery Pink",249,197,196],["8057","Ruddy Pink",243,178,175],["8056","Pink Linen",234,152,151],["8055","Rose Mist",224,129,124],["8054","Raspberry Souffle",198,92,81],["8053","Ginger Pop",176,72,68],["9998","Red Roof",249,221,216],["8067","First Crush",251,216,211],["8066","Tinge Of Pink",253,199,197],["8065","Spring Rose",250,173,171],["8064","Tinker Bell",242,148,149],["8063","Pink Candy",235,122,119],["8062","Satin Pink",209,92,93],["9999","Jolokia Red",170,77,79],["K001","Ketchup Red",247,212,210],["8083","Summer Pink",246,193,196],["8082","Rose Debut",240,181,182],["8081","Desert Bloom",229,163,165],["8080","Pink Carnation",213,132,136],["8079","Pink Accent",198,108,109],["8078","May Fair",177,85,79],["509","Geranium",172,86,85],["K002","Burgundy Rosso",246,235,229],["9412","Pearly Pink",247,222,219],["9411","Strawberry Whip",246,199,200],["9410","Pink Juice",243,183,185],["9409","Pink Essence",229,155,160],["9408","Early Bloom",219,135,141],["9407","Fruit Pink",199,104,106],["9406","Rose Meadows",172,79,73],["9405","Rich Tomato",248,217,219],["8091","Day Dream",251,207,213],["8090","Garden Pink",246,185,194],["8089","Ballet Slippers",243,171,183],["8088","Rose Bouquet",232,145,160],["8087","Wild Pink",218,114,127],["8086","Young Wine",175,73,79],["K003","Cherry Crush",165,70,77],["K004","Heady Wine",250,213,219],["8098","Pink Dollop",249,196,208],["8097","Pink Chenille",247,180,195],["8096","Climbing Rose",238,145,168],["8095","Azalea",221,123,141],["K005","Watermelon Sorbet",176,76,91],["K006","Crimson Cranberry",154,73,88],["K007","Magenta Rush",129,69,79],["8109","Fine Wine",238,212,212],["8107","Tinge Of Mauve",229,190,192],["8106","Daisy Bunch",212,170,175],["8105","In Vogue",197,148,151],["8104","Vintage Rose",175,119,121],["8103","Mauve Medley",162,105,106],["8102","Bottled Grape",127,76,79],["8101","Milan Red",124,65,65],["K008","Gulkand",244,216,216],["8115","Graceful Pink",234,194,199],["418","Merrie Pink",221,171,180],["8113","Bed Of Roses",201,142,154],["8112","Wild Rose",199,137,143],["K009","Bougainvillea Pink",193,128,137],["8111","Rose Water",177,110,118],["8110","Wild Berry",122,68,75],["K010","Bold Bordeaux",241,209,213],["0P","13 Pink Plume",237,196,203],["8122","Peach Blossom",233,182,191],["8121","Party Pink",218,159,170],["8120","Rose Lace",208,142,154],["8119","Petal Pink",183,102,112],["5155","Fox Glove Pink",152,63,73],["8117","Velvet Dream",146,70,81],["K011","Burnt Burgundy",233,204,208],["K012","Pink Wink",242,196,206],["K013","Pink Fog",233,170,188],["K014","Petal Dew",229,146,164],["K015","Periwinkle Pink",202,138,157],["K016","Mediterranean Pink",168,101,113],["K017","Mulberry Blush",159,90,113],["K018","Shiraz",149,62,74],["8125","Wild Prune",244,222,227],["8131","First Dawn",242,210,221],["8130","Rose Rhapsody",240,190,210],["8129","Maiden Pink",235,174,199],["8128","Touch Of Rouge",225,145,178],["8127","Rich Desire",201,99,138],["K019","Dragonfruit Pink",177,86,117],["K020","Fuchsia Fever",132,72,92],["K021","Merlot Rose",239,215,218],["K022","Pink Tinge",244,220,225],["8139","Pink Eternity",242,207,217],["8138","Baby Blush",239,191,207],["8137","Pixie Dust",221,174,194],["8136","Quiet Hush",209,149,175],["8135","Valentine",178,112,142],["8134","Damask Rose",142,63,79],["8133","Berry Brunch",242,223,225],["K023","Satin Rose",214,188,193],["K024","Magical Camelia",176,135,143],["K025","Mod Mauve",155,118,125],["K026","Chocolate Mauve",141,98,109],["K027","Violet Vignette",118,72,77],["K028","Rosy Ruby",103,65,70],["K029","Grape Jam",94,66,75],["K030","Grenache Noir",241,210,216],["K031","Natural Blush",215,176,183],["K032","Barbie Pink",198,169,175],["K033","Delicate Pansy",190,141,157],["K034","Sandstone Rouge",171,137,149],["K035","Amaranthus",163,130,144],["K036","Calluna Blossom",117,102,111],["K037","Purple Suede",104,93,100],["K038","Purple Night Sky",239,218,223],["8147","Spectre Of Pink",234,205,216],["8146","Princess Spell",232,194,212],["8145","Rose Window",213,170,194],["8144","Mauve Halo",189,134,162],["8143","Pomegranate",177,118,147],["8142","Electric Pink",129,73,101],["8141","Passion Fruit",95,67,85],["K039","Startling Purple",236,216,227],["8171","Spring Petals",233,205,220],["9106","Pink Hush",232,200,220],["8170","Autumn Rose",227,190,218],["8169","Pink Parasol",210,169,205],["8168","French Rose",198,152,192],["8167","Muted Scarlet",175,118,165],["8166","Violet Scream",137,76,121],["K040","Marwar Magenta",224,216,209],["K041","Muskaan",208,191,196],["K042","Puoi Pink",185,154,171],["9431","Garden Glow",154,124,154],["K043","Fading Phlox",145,122,149],["9111","Fresh Orchid",134,113,139],["9110","Velvet Plum",97,86,105],["K044","Violet Vibe",80,70,94],["K045","Violet Moon",217,205,205],["K046","Cool Camellia",222,200,206],["9451","Quiet Sky",216,198,201],["K047","Delicate Feather",195,179,190],["K048","Clematis Pink",173,150,162],["K049","Blooming Lavender",153,130,146],["K050","Heather Blush",149,130,142],["K051","Lavender Love",113,85,105],["K052","Blackberry Coulis",233,223,217],["941","Lavender Dew",229,213,217],["8203","Sassy Violet",209,189,200],["8202","Pink Musing",188,172,185],["8201","Purple Aura",160,142,160],["8200","Plum Cake",145,124,141],["8199","Admiration",134,109,127],["8198","Orchard Plum",80,73,84],["7141","Escapade",192,183,184],["K053","Currant Creme",189,186,188],["K054","Smoked Mauve",182,171,174],["K055","Light Lavendula",168,159,165],["K056","Arctic Mauve",149,139,148],["K057","Mauve Meditation",128,113,126],["K058","Black Currant",105,88,101],["K059","Purple Diva",89,72,81],["K290","Thai Purple",182,158,169],["K060","Desaturated Pink",174,156,163],["K061","Misty Mauve",136,106,122],["K062","Light Thistle",137,103,120],["K063","Muted Purple",128,97,119],["K064","Viola Indica",126,103,118],["K065","Opaque Amethyst",150,98,107],["K066","Dark Raisin",104,74,87],["K067","Velvet Stone",145,134,130],["K068","Smog",136,126,121],["K069","Horseshoe",132,121,130],["K070","Milky Mauve",131,122,126],["K071","Ash Mauve",113,103,98],["K072","Ash Bark",112,82,91],["K291","Plum Pudding",103,81,88],["K292","Almond Burgundy",92,81,82],["K073","Dark Ganache",228,217,217],["747","Oriental Hush",211,196,200],["8210","Lilac Dash",190,179,186],["8209","Shell Purple",161,150,159],["8208","Noble Purple",146,133,141],["8207","Evening Pansy",128,115,123],["8206","Cardinal",98,77,90],["K074","Jamuni",89,74,86],["8205","Majestic Purple",182,177,175],["K075","Dhund",161,152,154],["K076","Mauve Fog",150,145,149],["K077","Planet Grey",137,135,137],["K078","Galactic Grey",126,120,123],["K079","Lunar Tune",118,116,119],["K080","Brushed Metal",107,104,106],["K081","Dark Pebble",74,72,72],["K082","Hot Ganache",233,227,221],["8220","Grape Delight",221,212,210],["8219","Lavender Hush",208,199,198],["8218","Lilac Elegance",187,179,183],["8217","Sensuous Lilac",171,163,167],["8216","Royal Crest",146,137,140],["8215","Lavender Rose",125,115,118],["8214","Plum Island",76,68,72],["8213","Rich Berry",231,228,223],["8236","Iced Silver",215,211,208],["8235","Silica Dream",184,180,181],["8234","Fleecy Coat",161,160,164],["8233","Pigeon Grey",134,135,139],["8232","Elegant Grey",115,112,114],["8231","Muted Grey",98,95,98],["8230","Bentonite",77,72,71],["8229","Burnt Malt",218,219,217],["8252","Autumn Day",209,208,208],["8251","October Sky",184,186,189],["686","Armour",160,166,171],["6129","Pilgrim",127,133,142],["8248","Moon Crater",111,116,123],["8247","Whale Cove",95,100,106],["8246","Deep Mine",71,72,75],["8245","Tar Road",207,220,234],["K083","Globe Thistle",194,209,228],["K084","Periwinkle Tinge",168,172,178],["K085","Koala Grey",157,154,158],["K086","Corporate Grey",138,145,151],["K087","Stork Grey",125,132,140],["K088","Quarry Dust",129,124,122],["K089","Grey Jay",94,89,88],["K090","Pure Espresso",219,217,216],["9468","Lovely Lavender",220,220,221],["K091","Frozen Zanskar",199,202,203],["8258","Winter Moon",170,177,181],["616","Smoke",148,157,164],["8256","Electricity",111,118,125],["8255","Stone Path",93,100,106],["8254","Silent Night",64,64,63],["8253","Raven Song",193,198,196],["K092","Silver Sleek",191,202,204],["8267","Sensibility",159,178,186],["8266","Bali Blue",142,157,165],["8265","Brook View",119,135,144],["8264","Voltage",104,116,123],["630","Granite",94,105,111],["8262","Blue Lake",83,84,86],["8261","Thunder Cloud",182,186,182],["K093","Silver Moon",181,187,187],["K094","Pearl Grey",121,140,145],["K095","Terra Luna",99,116,122],["K096","Cold Steel",83,97,102],["K293","Matt Onyx",86,91,90],["K097","Mineral Ore",71,76,81],["K294","Black Sand",52,72,69],["K098","Teal Black",234,238,231],["9244","Tear Drop",230,233,224],["9476","Soft Whisper",208,218,214],["9475","Shining Blue",163,184,185],["9473","Sliver Spring",135,155,160],["9472","Sky Dark",111,132,138],["9471","Blazing Blue",84,102,107],["9470","Sea Pebbles",67,75,78],["9469","Black Sea",205,216,217],["8275","Clear Sky",180,198,204],["8274","Water'S Edge",159,181,190],["8273","Grand Bay",141,163,174],["8272","Blue Horizon",112,134,147],["6134","Smoke Grey",84,102,113],["8270","Ink Grey",67,75,81],["8269","Carbon Flint",54,68,77],["K099","Starless Night",213,215,215],["K100","Sky Tint",207,208,205],["978","Tiara",187,190,188],["6142","Steel",159,165,167],["8289","Cold Flint",131,138,139],["8288","Stone Age",106,111,111],["8287","Dusk Cloud",94,99,99],["8286","Charcoal Shadow",72,74,72],["8285","Mineshaft",212,209,199],["K101","Quiet Dawn",215,211,205],["8299","Ice Age",200,198,193],["8298","Silver Trinket",183,181,176],["8297","Platinum Disc",160,161,159],["8296","Metallic Grey",134,134,133],["8295","Sleigh Bells",102,101,98],["8294","Dark Shadow",76,72,68],["8293","Carbon Copy",188,191,182],["K102","Misty Moon",164,166,163],["K103","Grey Day",142,146,143],["K104","Silver Veil",129,137,135],["K105","Nicobar Pigeon",124,128,129],["K106","Weathered Rock",115,122,127],["K295","Grey Hare",115,118,120],["K107","Dark Concrete",87,93,98],["K296","Pencil Sketch",214,213,207],["8308","Whispering Smoke",199,199,194],["8307","Quicksilver",184,185,180],["615","Silver Grey",160,163,162],["643","Steel Grey",131,133,132],["8304","Grey Matter",113,114,112],["8303","Shadow Dance",99,101,99],["8302","Solemn Grey",80,80,77],["8301","Coal Mine",202,201,205],["K108","Rose Silver",156,157,158],["K109","Dove Plume",134,133,128],["K297","Menhir",117,115,110],["K110","Rugged Rock",116,114,112],["K111","Elephanta",103,102,101],["K112","Brushed Steel",99,98,98],["K113","Koala Streak",96,86,83],["K114","Silt Brown",201,195,187],["K115","Milky Coffee",148,144,143],["K116","Stainless Steel",118,114,113],["K117","Dark Thunder",121,116,112],["K118","Dolphin Grey",102,100,93],["K119","Ash Brown",94,93,87],["K120","Rhino Hide",91,84,74],["8469","Moss Land",85,75,64],["K121","Preserved Olive",179,179,175],["K122","Seagull Bay",160,158,152],["K123","Blizzard Grey",154,154,144],["K124","Heavy Cloud",134,139,134],["K125","Gathering Storm",126,128,123],["K126","Stormy Grey",106,110,107],["K127","Graphite Grey",87,90,88],["K128","Concrete Jungle",79,84,80],["K129","Charcoal Chalk",198,199,192],["K130","Badal",188,193,188],["740","Rhinestone",177,184,180],["8314","Winter Sky",154,162,162],["8313","Raw Steel",128,137,137],["8312","Gothic Grey",111,118,116],["8311","Roman Stone",97,104,102],["8310","Iron Ore",76,79,76],["8309","Antimony",197,197,188],["8331","Grey Flannel",184,185,175],["8330","Nimbus Shower",175,174,163],["K131","Monsoon Mist",156,160,154],["8329","Diamond Blade",135,138,132],["8328","Oxford Grey",116,118,111],["8327","Burnished Grey",104,105,99],["8326","Moor Lands",86,85,78],["8325","Eclipse",213,218,211],["956","December Frost",197,206,201],["8339","Ocean Cruise",186,196,191],["603","Ash Grey",159,171,170],["8337","Aluminium",134,147,148],["8336","Dark Water",114,126,125],["8335","Flipper",100,112,111],["8334","Moonless Sky",64,80,83],["K298","Black Moss",194,209,203],["8346","Misty Harbour",176,195,189],["8345","Sea Dreams",158,177,175],["8344","Mystic Lake",129,151,150],["8343","Steel Gleam",97,117,113],["8342","Fisherman'S Wharf",77,95,91],["K132","Seaweed Salad",60,80,80],["8341","Cape Royal",60,73,72],["K133","Shimla Valleys",169,178,170],["K134","Peppermint Air",144,158,147],["K135","Waterstone Grey",127,139,129],["K136","Silver Sage",99,113,101],["K137","Basilico",93,104,95],["K138","Grey River",88,99,91],["K139","Faraway Hill",91,106,100],["K140","Green Trinket",72,76,76],["8333","Midnight Oil",169,183,168],["K141","Meditation",153,167,150],["K142","Wise Sage",148,158,142],["K143","Dried Marjoram",132,145,134],["K144","Stony Brook",120,128,115],["K145","Foggy Valley",96,106,92],["K146","Sage Grey",96,101,91],["K147","Cave Grey",88,93,85],["K148","Old Mountain",226,237,220],["9332","Spring Bud",211,216,206],["973","Silver Crescent",187,197,185],["8370","Rain Mist",162,172,163],["8369","Hurricane",139,149,140],["6118","Light Grey",122,132,121],["8367","Green Shadow",103,113,103],["8366","Dark Cloud",82,87,78],["8365","Abyss",143,154,129],["K149","Italian Sage",136,156,123],["K150","Bayleaf Green",114,141,109],["K151","Darjeeling Green",99,110,79],["K152","Coriander Green",106,108,80],["8413","Banyan Grove",108,110,70],["K153","Pudina Green",88,92,62],["K154","Sahyadri Green",75,78,64],["K155","Planter",0,0,0],["8387","Mountain Stream",187,200,178],["8386","Pepper Leaf",169,192,171],["K156","Pista Cream",168,181,160],["8385","Dense Woods",150,162,141],["8384","Green Silence",129,141,117],["8383","Misty Hills",114,128,104],["8382","Spring Delight",92,100,78],["8381","Garden Party",205,209,196],["8395","Windswept",188,193,178],["8394","Grazing Land",163,169,156],["8393","Hidden Ravine",135,141,128],["8392","Rucksack Green",123,128,113],["8391","Green Valley",109,114,100],["8390","Hillside Green",90,92,79],["8389","Enchanted Forest",83,85,77],["K299","Green Patina",206,206,190],["8403","Pista Glimmer",193,193,175],["8402","Fernwood",172,174,157],["8401","Song Of Nature",152,155,138],["8400","Pineview",142,144,128],["8399","Mist Flower",113,115,98],["8398","Spring'S Eve",97,97,81],["8397","Tanned Green",84,82,67],["K157","Plantation Hues",219,221,202],["8411","Mystical Mist",196,200,176],["8410","Quiet Hour",181,188,165],["K158","Ethereal Sage",177,181,161],["8409","Dream Weaver",160,165,142],["8408","Woodlands",138,141,117],["8407","Cool Water",122,125,102],["8406","Green Dusk",100,100,79],["8405","Bamboo Grove",222,224,205],["0W","50 Celadon",209,213,189],["8419","Minty Ale",197,203,177],["8418","Forest",175,182,156],["8417","Herb Bouquet",146,154,128],["8416","Moody Green",134,141,111],["8415","Herbal Spa",122,129,100],["8414","Mossy Bark",108,115,93],["K159","Baby Olive",218,213,199],["684","Crusade",196,192,176],["8426","Stone Steps",172,171,157],["8425","Marble Quarry",153,152,138],["8424","Rock Wall",142,142,128],["8423","Grey Cloud",114,111,97],["8422","Smoked Green",98,94,80],["8421","Tea Leaf",90,83,67],["K160","Brigade Green",214,208,197],["8435","Grey Tint",193,187,174],["6126","Nickel Grey",167,165,156],["8433","Smoky Mountain",141,137,128],["8432","Garden Bench",131,127,117],["K161","Nagaon Beach",123,118,107],["8431","Rolling Stone",116,110,100],["8430","Stoic Grey",86,81,71],["8429","Bravo",222,214,201],["8443","Silver Mine",210,201,187],["8442","Weathered White",176,168,157],["8441","Chapel Grey",149,143,135],["8440","River Silt",133,124,114],["8439","Wrought Iron",112,108,100],["K162","Mud Carnival",116,108,98],["8438","Grey Blast",100,89,77],["8437","Burnt Metal",222,213,198],["8459","Raw Cotton",209,198,181],["9514","Creamy Crust",204,190,173],["0N","13 Silk Route",200,184,166],["4202","Sands Of Time",176,164,148],["8456","Butter Rum",153,140,124],["8455","Tropical Tan",125,110,93],["8454","Dull Birch",105,91,75],["8453","Mocha Mousse",214,204,189],["8467","Desert Palm",199,189,173],["8466","Twinkling Star",178,170,157],["8465","Desert Beige",171,161,149],["9513","Brown Points",152,143,129],["8464","Antartica",134,124,109],["8463","Rock Canyon",118,109,94],["8462","Riverbed Sand",104,94,80],["8461","Stone Creek",221,212,202],["8475","Snow Fall",208,199,188],["8474","Pisces",197,188,176],["8473","Oyster Grey",185,180,168],["K163","Neutral Ground",168,160,151],["8472","Wild Mushroom",134,125,114],["8471","Digital Grey",131,122,110],["K300","Barn Owl",119,110,99],["8470","Igneous Rock",213,205,182],["8482","Grey Buck",210,197,169],["9522","River Sand",203,193,169],["8481","Beach House",164,156,134],["8480","Beach Comber",147,137,112],["8479","Turtle Shell",134,124,99],["8478","Bay Leaf",120,106,78],["8477","Willow Song",95,82,62],["K164","Marshland",231,221,204],["8499","Meadow Lark",226,214,194],["974","Basra Pearl",198,185,166],["0N","02 Warmstone",174,160,140],["4120","Burnt Yellowstone",161,144,119],["8495","Highland Grass",146,130,105],["8494","African Plain",101,87,69],["8493","Olive Grove",89,73,63],["K165","Camouflage Brown",143,116,60],["K166","Wolf Lichen",135,112,56],["K167","Cherrapunji Green",123,104,59],["K168","Brined Olive",125,102,57],["K169","Marsh Green",114,96,59],["K170","Long Live Olive",114,100,72],["K171","Seaweed Brown",111,100,74],["K172","Greenathon",89,80,65],["K173","Olive Lake",157,123,66],["K174","Ragi Brown",144,120,81],["K175","Multani Mitti",129,105,69],["K176","Brown Mustard",113,96,70],["K177","Colonel",0,0,0],["K178","Olive Hill",109,97,76],["K179","Pepper Verde",102,94,74],["K180","Alleppey Waters",99,89,71],["K181","Summer Grove",241,230,210],["8508","Touch Of Beige",239,224,199],["949","Moon Beam",225,203,167],["8506","Dusty Trail",209,186,150],["8505","Beige Accent",190,165,126],["8504","Wood Fence",178,150,106],["8503","Barefoot Beach",166,137,94],["8502","Bottled Olives",145,118,75],["8501","Pampas",240,230,210],["942","Daybreak",235,222,199],["3196","Pine Nut",224,205,174],["4214","Sweet Corn",209,187,156],["8513","Tropics",188,163,129],["8512","Almond Sand",179,152,113],["8511","Soft Moccasin",161,134,96],["8510","Svelte Leather",133,108,75],["8509","Cozy Cabin",243,229,204],["8524","Garlic Pod",241,219,189],["387","Magnolia",234,205,167],["315","Ivory",222,188,151],["336","Buttercup",203,164,121],["8520","Balsam Brown",188,145,97],["8519","Sunderbans",179,136,89],["8518","Golden Prairie",156,116,74],["8517","Gold Standard",239,224,203],["8532","Easter Lily",234,216,190],["964","Bonewhite",227,204,174],["8530","Valley Flower",212,186,157],["4215","Swiss Coffee",191,160,128],["8528","Bush Land",180,147,112],["8527","Antelope",164,132,98],["8526","Mexican Hills",145,112,79],["8525","Royal Crown",162,127,94],["K182","Deerskin",163,131,93],["K183","Loris Brown",139,112,82],["K184","Brass Olive",125,100,73],["K185","Tadoba Grass",118,94,70],["K186","Dark Fawn",121,94,66],["K187","Autumn Twig",111,91,70],["K188","Herbal Tonic",93,79,66],["K189","Ranthambore Creek",239,223,203],["950","Old Lace",232,211,186],["8539","River Reed",225,197,169],["8538","Fennel Seed",209,178,150],["8537","Milk Chocolate",187,156,127],["8536","Barren Oak",175,140,107],["8535","Brown Tan",162,123,91],["8534","Caramel Custard",145,109,76],["8533","Honeycomb",235,220,205],["975","Coral Treasure",228,209,191],["940","Antique White",219,195,174],["8554","Heritage Hills",211,185,163],["469","Dawn",190,166,148],["470","Light Coffee",164,139,119],["3211","Sandstone",138,110,89],["8550","Earth Song",122,96,76],["8549","Cafe Latte",243,227,209],["8564","Sweet Dreams",242,220,196],["8563","Cane Beige",235,207,179],["3122","Ceramic",231,200,169],["8561","Oak Leaf",219,183,154],["362","Light Buff",200,158,125],["8559","Peanut Butter",172,125,90],["8558","African Desert",158,111,74],["4198","Roast Brown",241,228,211],["0N","68 Victorian Wisp",233,208,185],["8571","Dune Walk",229,200,176],["0N","22 Talc",209,175,150],["8569","Hazel Nut",187,152,126],["8568","Indian Spice",175,137,107],["8567","Rustic Charm",159,121,94],["8566","Tree Bark",134,98,74],["8565","Cairo Bazaar",239,223,206],["8580","Memories",231,206,184],["8579","Baked Biscuit",220,189,165],["8578","Calamine",202,172,151],["8577","Brown Paper",177,145,121],["8576","Country Roads",164,129,103],["8575","Straw Mat",153,116,92],["8574","Burnished Caramel",137,102,80],["8573","Mochaccino",234,210,190],["477","Spice",219,187,165],["8586","Sand Clock",201,169,149],["501","Apricot",175,142,121],["8584","Dry Acorn",167,130,106],["4194","Pharoah",151,115,92],["8582","Brown Sugar",128,93,71],["8581","Antique Brass",107,80,68],["8645","Rich Chocolate",156,105,62],["K190","Honey Oatmeal",141,98,62],["K192","Desert Shrub",141,93,63],["K193","Burnt Toffee",135,93,64],["K194","Cedar Bark",128,92,65],["K195","Millet Brown",109,83,67],["K197","Dark Kaapi",166,122,95],["K198","Arabica Roast",172,121,94],["K199","Arabian Dune",162,107,77],["K200","Hazelnut Mousse",146,93,69],["K201","Brown Deer",135,93,73],["K202","Sarawak",126,91,73],["K203","Wildebeest Run",120,92,75],["K204","Charred Umber",113,85,72],["K205","Muddy Creek",214,189,163],["9530","Camel Skin",170,139,112],["K206","Warm Khaki",163,130,106],["K207","Borneo River",142,114,90],["9526","Brown Bread",126,98,79],["K208","Orangutan Brown",117,87,74],["K209","Reindeer Coat",96,78,66],["K210","Havana Cigar",89,79,74],["K211","River Soil",243,229,212],["8596","Crystal Beach",242,212,185],["8595","Brick Pile",239,201,172],["572","Barley",234,192,163],["5219","Poetry",221,173,144],["318","Light Biscuit",201,147,116],["8591","Lazy Brown",178,120,86],["523","Copper Leaf",161,102,70],["8589","Ethnic Brown",241,224,209],["989","Windsor Cream",236,213,195],["8603","Beach Shack",222,187,163],["8602","Herbal Pack",204,166,146],["5226","Red Marble",191,150,128],["8600","Country Beige",178,133,109],["8599","Ginger Bread",163,116,93],["8598","Tawny Sky",115,83,70],["419","Nut Brown",242,219,204],["8612","Waking Earth",239,199,181],["8611","Flushed Brown",231,182,162],["8610","Bonny Peach",230,179,158],["8609","Ancient Inca",213,159,141],["8608","Peach Nectar",192,131,113],["8607","Marco Polo",167,105,85],["4234","Brownstone",157,86,70],["8605","Truffle Surprise",238,214,203],["5260","Vanity",239,208,194],["0N","17 Palace Lights",226,182,165],["5117","Blushing Rose",212,165,151],["8617","Sunbaked Clay",198,147,132],["8616","Rustic Pottery",179,119,101],["8615","Copper Coast",164,104,86],["533","Brick Red",138,84,67],["8613","Old Brick",156,107,96],["K212","Dessert Love",132,85,76],["K213","Apricot Nut",114,78,69],["K214","Chocolate Fudge",111,79,68],["K215","Dark Horse",108,81,70],["K216","Banyan Trunk",101,80,70],["K217","Stallion Brown",95,71,64],["K218","Tempered Chocolate",89,70,66],["9582","Otter Brown",248,220,207],["8635","Truffle",240,195,178],["5132","Cold Candy",229,169,150],["8633","Timber Ridge",215,152,135],["8632","Rocky Cliff",193,124,109],["8631","Prairie Island",191,114,95],["K219","Navajo Dust",172,100,81],["587","Copper",142,75,63],["427","Terracotta",232,200,189],["8643","Almond Kiss",224,186,173],["8642","Brick Clay",212,166,154],["8641","Warm Sands",192,147,138],["7027","Lingering Brew",163,112,100],["8639","Brick Tone",147,96,84],["8638","Inner Bark",110,72,69],["4181","Moody Maroon",100,70,66],["K220","Brownie Points",233,219,209],["944","Twilight Hush",217,196,185],["0R","08 Rose Petal",204,180,168],["8650","Camel",184,160,151],["8649","Hidden Vale",167,142,133],["4115","Brandy",153,125,113],["8647","Spice Variety",130,103,91],["8646","Java Beans",108,78,72],["K221","Bavarian Chocolate",217,201,192],["8659","Sparrow Feather",203,185,176],["8658","Quarry Stone",194,174,165],["8657","Dancing Deer",172,153,147],["8656","Mud House",140,118,109],["8655","Cappuccino",117,97,89],["8654","Frosted Chocolate",110,93,83],["K222","Wet Clay",91,73,66],["8653","Caffeine",244,212,202],["8675","Palm Peach",237,188,177],["8674","Coral Bells",230,170,160],["8673","Cedar Path",203,135,126],["8672","Cinnamon Rose",202,131,121],["K223","Pink Sandstone",179,108,100],["8671","Spice Jar",166,91,79],["8670","Mohican Trail",138,74,69],["8669","Marooned Brown",225,206,184],["9531","Soothing Silk",237,218,199],["K224","Blush Cream",236,206,186],["K225","Peach Macaron",195,147,124],["K226","Macadamia Cream",189,125,108],["K227","Tea Brown",184,109,98],["K228","Nutmeg Cream",159,87,75],["K229","Cinnamon Sprinkle",140,72,58],["K230","Peri Peri",232,210,201],["K231","Pink Clam",243,213,206],["K232","Strawbella",243,204,196],["K233","Chantilly Strawberry",230,190,179],["K234","Strawberry Shortcake",225,181,167],["K235","Baby Bunny",214,164,153],["K236","Pinkish Beige",159,123,112],["K237","Irish Creme Coffee",149,110,99],["K238","Earthen Symphony",217,199,187],["K239","Light Latte",222,192,180],["K240","Luminous Dawn",226,191,179],["K241","Raspberry Shell",239,186,173],["K242","Warm Pink",223,167,156],["K243","Coral Room",173,119,109],["K244","Powder Rouge",178,115,106],["K245","Soapstone Rose",149,96,88],["K246","Sequoia Bark",246,221,207],["K247","Camellia Bud",249,217,201],["K248","Oyster Blush",254,208,197],["K249","Raspberry Pannacotta",249,201,188],["K250","Pleasant Dreams",227,177,169],["K251","Talc Pink",204,164,157],["K252","Wispy Warmth",190,137,133],["K253","Warm Mauve",122,72,65],["K254","Honey Sheesham",226,209,199],["K255","Dawn Blush",246,229,219],["K256","Paradise Light",247,227,221],["K257","Champagne Pink",237,212,209],["K258","Softest Rose",217,187,177],["K259","Subtle Mauve",202,171,162],["K260","Dreamy Pink",184,149,142],["K261","Pastel Mauve",138,77,74],["K262","Rosewood Rouge",241,222,219],["8708","White Flame",220,193,195],["8698","Pink Embrace",209,176,180],["8697","Pink Compact",189,157,163],["8696","Pampered Pink",164,130,137],["8695","Vintage Wine",140,104,106],["8694","Spring Bliss",119,74,76],["8693","Cheerful Cherry",104,67,68],["K263","Smoked Chestnut",234,215,211],["8692","Almond White",226,204,201],["8691","Morning Light",214,189,186],["8690","Mountain Retreat",201,172,170],["8689","Jewel Sand",179,151,151],["8688","Indian Earth",152,121,122],["8687","Deep Currant",132,97,97],["8686","Chocolate Cherry",110,65,67],["0R","05 Mahogany",235,211,211],["8707","Vibrant Blush",231,199,203],["8706","Spring Season",223,184,190],["8705","Rose Plume",204,165,174],["8704","Noah'S Ark",179,136,147],["8703","Root Beer",155,110,120],["8702","Grape Punch",118,71,82],["8701","Very Berry",108,72,80],["K264","Plum Brunette",230,208,211],["481","Strawberry",214,185,189],["8714","Pink Bloom",209,178,183],["8713","Shrub Rose",194,159,166],["8712","Winter Cherry",168,129,139],["8711","Sea Shell Rose",144,103,108],["8710","Cheer Up",122,79,88],["8709","Vine Yard",120,72,82],["K265","Wine Harvest",148,127,123],["K266","Lilac Grey",146,113,105],["K267","Creme De Cacao",124,98,90],["K268","Drinking Chocolate",121,98,92],["K269","Mocha Love",114,91,84],["K270","Falcon Feather",108,87,79],["K271","Algerian Chocolate",97,83,75],["K272","Muddy Taupe",79,71,68],["K273","Weathered Alluvium",172,170,169],["K274","Serene Grey",167,163,165],["K275","Silverfish",152,142,135],["K276","Quiet Dusk",133,116,111],["K277","Grey Wind",128,117,112],["K278","Stalactite",117,104,102],["K279","Kahlua Creme",104,89,84],["K280","Deep Umber",88,75,69],["K281","Dark Soil",212,204,196],["K282","Country Chic",216,201,196],["8747","Maple Syrup",201,185,180],["8746","Mauve Star",187,168,164],["8745","Misty Rose",162,146,146],["8744","Mystery",135,119,120],["8743","Rave Raisin",113,94,91],["8742","Lumber Jack",91,72,66],["8741","Weathered Oak",219,209,200],["8756","Sound Of Music",209,197,188],["0N","05 Fawn",193,179,171],["8754","Desert Dune",167,155,149],["8753","Earl Grey",144,130,125],["8752","Utopia",127,111,103],["8751","Toasted Toffee",116,101,94],["8750","Mohawk Valley",83,72,66],["8749","Dried Spices",230,219,207],["8780","Southern Sand",217,204,192],["8763","Moccasin",198,183,170],["8762","Cookie Dough",174,163,154],["8761","Grey Sandstone",150,140,130],["8760","English Castle",137,123,112],["8759","Timber Land",119,107,96],["8758","Evening Shade",100,86,74],["8757","Kayak",218,207,196],["8771","Cambridge",198,182,170],["8770","Beige Rage",176,161,151],["8769","Taupe Tone",160,144,133],["8768","Wild West",145,126,113],["8767","Hawaiian Shack",128,110,97],["8766","Brownie",105,86,74],["8765","Roasted Beans",101,83,66],["K283","Tuscan Olive",225,209,194],["8779","Desert Dreams",212,194,178],["8778","Walnut Cream",196,176,160],["302","Beige",176,158,145],["8776","Dark Ash",151,134,122],["8775","Rock Crystal",126,107,94],["8774","Wooden Chest",112,88,76],["K284","Dark Chocolate",104,85,71],["8773","Vintage Walnut",0,0,0],["X179","Laal",199,61,60],["8093","Pure Red",185,74,78],["X122","Rich Rouge",186,62,68],["8085","Scarlet",160,70,78],["X185","Anar",165,65,79],["X124","Red Alert",145,64,72],["X123","Crimson Depth",105,76,76],["X127","Raisin Delight",239,129,65],["X174","Yogi",227,115,66],["526","Sunrise",226,112,67],["X177","Palash",232,101,67],["8021","Hot Shot",219,88,73],["8045","Centre Stage",188,77,66],["X117","Rodeo",184,63,62],["520","Signal Red",155,72,65],["X118","Red Red",245,126,51],["7973","Goldfish",242,124,53],["X206","Gulmohar",239,111,56],["X114","Camp Fire",221,101,60],["X113","Orange Tango",220,84,57],["X115","Sahara Sunset",211,75,61],["506","Deep Orange",186,67,58],["X120","Code Red",168,81,65],["X116","Cider Red",251,156,49],["X110","Orange Vision",254,155,79],["7974","Orange Crown",254,147,43],["7957","Orange Peel",249,148,52],["X221","Morning Raga",243,137,51],["X111","Glorious Sunset",225,117,58],["X112","Glowing Rust",173,91,57],["X207","Maati",158,86,57],["X196","Gerua",252,167,52],["X170","Kesar Delicacy",254,175,72],["7950","Fire Globe",254,168,0],["7941","Turmeric",254,171,30],["X109","Mango Mood",251,161,34],["X220","Gulbahar",239,159,38],["7917","Thar Desert",217,149,49],["X107","Passion Flower",191,136,67],["3176","Mid Buff",254,197,71],["7910","Desert Glow",254,193,64],["X161","Boondi",254,182,0],["7909","Mango",249,173,48],["X219","Surajmukhi",243,174,53],["7893","Radiance",237,171,42],["7901","Mustard",231,162,48],["X169","Golden Jejuri",197,149,82],["X172","Jaipur Safari",254,194,44],["X216","Sonchafa",254,191,25],["7869","Polka",241,188,71],["X166","Dhoop",237,177,48],["X218","Golden Alphonso",230,173,62],["X217","Pukhraj",218,168,61],["X214","Makai Dana",203,148,48],["X173","Peeli Sarson",190,141,64],["X106","Ochre Shadow",254,206,72],["7870","Golden Ray",254,202,38],["7861","Sunny Yellow",254,194,0],["X105","Lemon Ole",234,182,48],["X215","Pondicherry Yellow",215,173,85],["X167","Mahua",219,176,50],["X101","Gold Rush",211,167,46],["X102","Mustard Field",203,158,54],["X213","Fasal",254,214,78],["7862","Yellow Marigold",254,204,68],["X212","Fresh Mosambi",254,197,46],["X104","Sporty Yellow",238,184,27],["X103","Victorian Gold",211,183,51],["X210","Sunny Sonmarg",204,174,39],["7829","Summer Fern",175,158,54],["X225","Kairi Panha",145,131,55],["X224","Sugarcane Juice",250,202,23],["X168","Baisakhi Yellow",223,201,65],["X209","Amrud",204,192,56],["X223","Amla Green",170,178,51],["9365","Lemon Blast",173,179,40],["7741","Sporting Green",146,157,58],["X222","Paan",120,135,77],["X160","Chrome Green",101,132,76],["X158","Forest Glade",217,210,92],["X165","Dhaani",217,207,76],["7774","Festivity",207,200,49],["7773","Lemon Souffle",176,198,69],["X211","Jugnu",122,168,52],["X159","Loud Lime",76,176,103],["X176","Konkan Green",32,130,100],["X184","Madras Green",57,115,79],["X156","Hill And Vale",54,176,127],["7566","Blade Of Grass",3,168,115],["X175","Sawan",0,155,108],["X193","Basant Bahar",0,136,99],["X192","Sanobar",0,127,85],["X194","Hariyali",52,108,77],["X155","Emerald Lights",63,110,79],["7581","Cilantro",68,101,89],["X153","Amazon Moss",0,155,167],["7438","Rustic Turquoise",0,141,159],["X182","Neelkanth",0,125,145],["X183","Jal Tarang",0,118,129],["X149","Polished Blue",53,107,116],["X181","Deep Indus",56,100,104],["X151","Turquoise Ocean",54,92,95],["X152","Night At Sea",56,85,93],["X150","Teal Dream",99,176,209],["X171","Samudra",75,161,195],["7359","Mughal Blue",0,134,177],["X190","Sagar",0,124,159],["X191","Kedarnath Skies",0,119,145],["X147","Mineral Blue",0,105,130],["X164","Deep Firozi",0,106,126],["161","Peacock Blue",46,91,111],["X148","Pigeon Crest",106,175,217],["7328","Greek Vase",85,163,211],["7327","Inkjet",33,118,172],["X195","Jodhpur Walls",0,119,171],["X189","Neelam",0,105,157],["X188","Nabha",29,98,138],["X146","Ocean Force",53,87,117],["X145","Inky Sea",60,83,112],["X144","Colonial Blue",108,99,154],["X180","Festive Purple",105,82,131],["X186","Arabian Nights",92,79,128],["7157","Egg Plant Delite",79,79,130],["X187","Banaphool",72,76,123],["7213","Blue Berry",64,78,126],["7245","Imperial Blue",65,86,124],["X142","Nautical Mile",67,79,101],["X143","Royal Wave",202,110,162],["X178","Gulabi",197,100,150],["X205","Gulbakshi",142,83,127],["X138","Grape Riot",136,71,105],["X137","Very Fuschia",112,73,100],["X139","Violet Saga",107,76,108],["X140","Violet Paradise",92,75,106],["X141","Midnight Interlude",88,68,84],["8197","Hip Purple",220,126,156],["X204","Peshwai Pink",212,112,148],["8126","Shocking Pink",166,70,104],["X132","Deep Pink",143,71,88],["X131","Violet Delight",137,67,93],["X133","Regal Purple",117,71,93],["X136","Purple Prose",108,68,84],["X135","Cherry Bon Bon",97,61,78],["X162","Kokam",232,119,140],["8094","Cupid",192,71,86],["X202","Auspicious Red",167,77,93],["X126","Cherry Brandy",162,73,91],["X125","Moulin Rouge",128,78,85],["X130","Raspberry Crush",127,69,75],["X129","Burgundy Plus",113,71,75],["X128","Dark Cherry",97,72,80],["X134","Burnt Violet",162,75,83],["X199","Sindoor",170,75,90],["X203","Aalta",153,74,91],["X200","Lalbaug",158,73,87],["X201","Kanchipuram Red",153,72,83],["X198","Beet Red",144,71,83],["X197","Ambadi",130,72,79],["X163","Apple Sangria",111,65,69],["X208","Kashmiri Kesar",0,0,0]];
+
+const AP_WHITE_CODES = new Set(["9436","8108","8116","8716","8099","8092","8124","5182","8100","8140","8060","8084","8036","8676","8620","8012","7148","8204","L178","8068","8052","L139","945","9516","L164","L145","L140","L138","L147","5184","8020","951","L107","8636","5232","L142","8028","L132","L127","L131","7948","7860","307","3203","L188","L189","L190","L129","8004","7996","L141","L151","952","L173","8460","L135","L150","L126","7972","7988","L160","L133","L136","8764","L146","L148","7940","L124","8500","L134","L157","L158","L143","L183","L103","L156","L102","L179","8476","4148","L125","L123","L104","L101","L149","L174","8436","L159","L144","L170","7932","8444","L105","L122","L175","8483","L152","L155","765","L153","8484","8428","L109","8300","L154","L121","7836","7916","L176","8412","8292","8332","L161","L165","L172","L177","8372","8348","8404","8396","7220","8260","L118","L120","7668","7676","7660","7684","L166","L171","L169","L108","L185","8388","L117","947","L163","L119","763","L112","L116","1205","8316","9484","L162","L186","7252","7420","L113","7556","7612","8347","8259","8276","L111","7492","7572","L115","7588","7564","L184","7236","7276","7332","7444","7476","7491","977","L181","7300","7308","7348","7388","7412","L114","7460","7228","7251","7364","7372","7347","7419","9228","7363","7188","L180","7156","7172","7164","7155","L187","7163","766","8212","8132","8700","9108","8148","8172"]);
+
+let currentImg = null;
+let palette = [];
+let originalBase64 = "";
+let zoomScale = 1, isPanning = false, startX = 0, startY = 0, panX = 0, panY = 0;
+let editingPaletteIndex = null;
+let pickerActive = false;
+
+function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function getReadableTextColor(hex){
+  const [r,g,b] = hexToRgb(hex);
+  const srgb = [r,g,b].map(v => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  const luminance = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return luminance > 0.55 ? '#0f172a' : '#ffffff';
+}
+function rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0, s=0, l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>0.5? d/(2-max-min):d/(max+min);
+    switch(max){
+      case r: h=(g-b)/d+(g<b?6:0); break;
+      case g: h=(b-r)/d+2; break;
+      default: h=(r-g)/d+4;
+    }
+    h/=6;
+  }
+  return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+}
+function hslToRgb(h,s,l){
+  h/=360; s/=100; l/=100;
+  let r,g,b;
+  if(s===0){ r=g=b=l; }
+  else{
+    const hue2rgb=(p,q,t)=>{ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6)return p+(q-p)*6*t; if(t<1/2)return q; if(t<2/3)return p+(q-p)*(2/3-t)*6; return p; };
+    const q=l<0.5?l*(1+s):l+s-l*s, p=2*l-q;
+    r=hue2rgb(p,q,h+1/3); g=hue2rgb(p,q,h); b=hue2rgb(p,q,h-1/3);
+  }
+  return [Math.round(r*255),Math.round(g*255),Math.round(b*255)];
+}
+function hslToHex(h,s,l){
+  const [r,g,b] = hslToRgb(h,s,l);
+  return rgbToHex(r,g,b);
+}
+function colorDist(r1,g1,b1,r2,g2,b2){ const rm=(r1+r2)/2, dr=r1-r2, dg=g1-g2, db=b1-b2; return Math.sqrt((2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db); }
+function isNearWhite(r,g,b){ const lum = 0.2126*(r/255) + 0.7152*(g/255) + 0.0722*(b/255); const sat = Math.max(r,g,b) - Math.min(r,g,b); return lum > 0.72 && sat < 40; }
+
+function getColorCategory(r,g,b){
+  const lum = 0.2126*(r/255) + 0.7152*(g/255) + 0.0722*(b/255);
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), sat = max - min;
+
+  // Whites / Off-Whites: very light AND low saturation
+  if(lum > 0.68 && sat < 45) return 'WHITES / OFF-WHITES';
+
+  // Light shades: fairly bright (can have moderate saturation - pastels, soft tones)
+  if(lum >= 0.38) return 'LIGHT SHADES';
+
+  // Dark shades: very dark
+  if(lum < 0.12) return 'DARK SHADES';
+
+  // Mid tones: woods, metals, CNC (medium luminance with earthy/neutral/metallic feel)
+  return 'OTHER TONES (WOODS / METAL / CNC)';
+}
+
+function rgbToLab(r,g,b){
+  let rr=r/255, gg=g/255, bb=b/255;
+  rr = rr>0.04045?Math.pow((rr+0.055)/1.055,2.4):rr/12.92;
+  gg = gg>0.04045?Math.pow((gg+0.055)/1.055,2.4):gg/12.92;
+  bb = bb>0.04045?Math.pow((bb+0.055)/1.055,2.4):bb/12.92;
+  let x=(rr*0.4124+gg*0.3576+bb*0.1805)/0.95047;
+  let y=(rr*0.2126+gg*0.7152+bb*0.0722)/1.00000;
+  let z=(rr*0.0193+gg*0.1192+bb*0.9505)/1.08883;
+  x=x>0.008856?Math.pow(x,1/3):7.787*x+16/116;
+  y=y>0.008856?Math.pow(y,1/3):7.787*y+16/116;
+  z=z>0.008856?Math.pow(z,1/3):7.787*z+16/116;
+  return [116*y-16, 500*(x-y), 200*(y-z)];
+}
+
+function deltaE(r1,g1,b1,r2,g2,b2){
+  const [l1,a1,b1l]=rgbToLab(r1,g1,b1);
+  const [l2,a2,b2l]=rgbToLab(r2,g2,b2);
+  return Math.sqrt((l1-l2)**2+(a1-a2)**2+(b1l-b2l)**2);
+}
+
+function findNearest(hex, n=3){
+  const [r,g,b] = hexToRgb(hex);
+  const nearWhite = isNearWhite(r,g,b);
+
+  const pool = AP_COLORS.filter(c => {
+    // Filter error/placeholder entries (pure black RGB)
+    if(c[2]===0 && c[3]===0 && c[4]===0) return false;
+    if(nearWhite){
+      return AP_WHITE_CODES.has(c[0]);
+    } else {
+      return !AP_WHITE_CODES.has(c[0]);
+    }
+  });
+
+  return pool.map(c => ({
+    code:c[0],
+    name:c[1],
+    hex:rgbToHex(c[2],c[3],c[4]),
+    dist:deltaE(r,g,b,c[2],c[3],c[4])
+  })).sort((a,b)=>a.dist-b.dist).slice(0,n);
+}
+
+const container = document.getElementById('canvasContainer');
+const imgEl = document.getElementById('previewImg');
+
+if(container){
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = 0.15;
+    if(e.deltaY < 0){
+      zoomScale = Math.min(6, zoomScale + zoomFactor);
+    }else{
+      zoomScale = Math.max(1, zoomScale - zoomFactor);
+      if(zoomScale === 1){ panX = 0; panY = 0; }
+    }
+    applyTransform();
+  });
+
+  container.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if(zoomScale > 1){
+      isPanning = true;
+      document.body.style.userSelect = 'none';
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if(!isPanning) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => { isPanning = false; document.body.style.userSelect = ''; });
+}
+
+function applyTransform(){
+  if(imgEl) imgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
+}
+
+async function activateNativeDropper(){
+  if(!window.EyeDropper){
+    alert("EyeDropper API is not supported in this browser.");
+    return;
+  }
+  const dropper = new EyeDropper();
+  try{
+    const result = await dropper.open();
+    addManualColor(result.sRGBHex);
+  }catch(err){
+    console.log("EyeDropper cancelled.");
+  }
+}
+
+function handleFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    originalBase64 = e.target.result;
+    const img = new Image();
+    img.onload = () => {
+      currentImg = img;
+      const workspacePickBtn = document.getElementById('workspacePickBtn');
+      if(workspacePickBtn){
+        workspacePickBtn.style.display = 'inline-flex';
+        workspacePickBtn.textContent = 'Pick Color From Image';
+      }
+      if(imgEl) imgEl.src = originalBase64;
+      document.getElementById('printTargetImg').src = originalBase64;
+      const vImg = document.getElementById('printTargetImgVertical');
+      if(vImg) vImg.src = originalBase64;
+      document.getElementById('exportJpgBtn').style.display = 'inline-flex';
+      document.getElementById('exportPdfBtn').style.display = 'inline-flex';
+      const vJ = document.getElementById('exportVJpgBtn');
+      const vP = document.getElementById('exportVPdfBtn');
+      if(vJ) vJ.style.display = 'inline-flex';
+      if(vP) vP.style.display = 'inline-flex';
+      const drop = document.getElementById('dropZone');
+      if(drop) drop.style.display = 'none';
+      zoomScale = 1; panX = 0; panY = 0; applyTransform();
+      extractColors();
+    };
+    img.src = originalBase64;
+  };
+  reader.readAsDataURL(file);
+}
+
+function extractColors(){
+  if(!currentImg) return;
+  const k = parseInt(document.getElementById('colorCount').value);
+
+  const canvas = document.getElementById('canvas');
+  const size = 100; canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(currentImg, 0, 0, size, size);
+  const data = ctx.getImageData(0,0,size,size).data;
+
+  const pixels = [];
+  for(let i=0; i<data.length; i+=16){
+    const r = data[i], g = data[i+1], b = data[i+2];
+    const maxC = Math.max(r,g,b), minC = Math.min(r,g,b), sat = maxC-minC;
+
+    if(g>r && g>b && g>70 && sat>15) continue;
+    if(b>r && b>g && b>90 && sat>15 && (b-r)>12) continue;
+    if(sat<18 && r>70 && r<180 && Math.abs(r-g)<12 && Math.abs(g-b)<12) continue;
+
+    pixels.push([r,g,b]);
+  }
+
+  if(pixels.length === 0) pixels.push([220,220,220]);
+
+  let centers = [];
+  for(let i=0; i<k; i++) centers.push(pixels[Math.floor(Math.random()*pixels.length)]);
+
+  for(let iter=0; iter<5; iter++){
+    const clusters = Array.from({length:k}, () => ({s:[0,0,0], c:0}));
+    for(const p of pixels){
+      let b = 0, bd = Infinity;
+      for(let i=0; i<k; i++){
+        const d = (p[0]-centers[i][0])**2 + (p[1]-centers[i][1])**2 + (p[2]-centers[i][2])**2;
+        if(d < bd){ bd = d; b = i; }
+      }
+      clusters[b].s[0] += p[0]; clusters[b].s[1] += p[1]; clusters[b].s[2] += p[2];
+      clusters[b].c++;
+    }
+    centers = clusters.map((cl,i) => cl.c === 0 ? centers[i] : cl.s.map(v => Math.round(v/cl.c)));
+  }
+
+  const uniqueHex = Array.from(new Set(centers.map(c => rgbToHex(c[0], c[1], c[2]))));
+  palette = uniqueHex.map(h => ({hex:h, selected:true}));
+  renderPalette();
+  runMatch();
+}
+
+function renderPalette(){
+  const container = document.getElementById('paletteSwatches');
+  if(!container) return;
+  container.innerHTML = '';
+  palette.forEach((p,i) => {
+    const div = document.createElement('div');
+    div.className = 'p-swatch' + (p.selected ? ' selected' : '');
+    div.innerHTML = `
+      <div class="palette-preview" style="background:${p.hex}"></div>
+      <div class="palette-meta">
+        <div class="palette-hex">${p.hex.toUpperCase()}</div>
+        <div class="palette-rgb">RGB(${hexToRgb(p.hex).join(", ")})</div>
+      </div>
+      <div class="palette-actions">
+        <button class="palette-act-btn edit" type="button">Edit</button>
+        <button class="palette-act-btn delete" type="button">Delete</button>
+      </div>
+    `;
+    div.onclick = (e) => {
+      if(e.target.closest('.palette-act-btn')) return;
+      palette[i].selected = !palette[i].selected; renderPalette(); runMatch();
+    };
+    div.querySelector('.palette-act-btn.delete').onclick = (e) => {
+      e.stopPropagation();
+      palette.splice(i,1); renderPalette(); runMatch();
+    };
+    div.querySelector('.palette-act-btn.edit').onclick = (e) => {
+      e.stopPropagation();
+      openEditModal(i);
+    };
+    container.appendChild(div);
+  });
+}
+
+function openEditModal(index){
+  editingPaletteIndex = index;
+  const modal = document.getElementById('paletteEditModal');
+  const [r,g,b] = hexToRgb(palette[index].hex);
+  const hsl = rgbToHsl(r,g,b);
+  document.getElementById('editHue').value = hsl.h;
+  document.getElementById('editSat').value = hsl.s;
+  document.getElementById('editLight').value = hsl.l;
+  updateEditPreview();
+  modal.classList.add('open');
+}
+function closeEditModal(){
+  editingPaletteIndex = null;
+  document.getElementById('paletteEditModal').classList.remove('open');
+}
+function updateEditPreview(){
+  const h = parseInt(document.getElementById('editHue').value,10);
+  const s = parseInt(document.getElementById('editSat').value,10);
+  const l = parseInt(document.getElementById('editLight').value,10);
+  document.getElementById('editHueValue').textContent = `${h}°`;
+  document.getElementById('editSatValue').textContent = `${s}%`;
+  document.getElementById('editLightValue').textContent = `${l}%`;
+  const [r,g,b] = hslToRgb(h,s,l);
+  document.getElementById('paletteEditPreview').style.background = rgbToHex(r,g,b);
+}
+
+function addManualColor(hex){
+  palette.push({hex:hex, selected:true});
+  renderPalette();
+  runMatch();
+}
+
+function getImagePixelFromClient(clientX, clientY){
+  if(!currentImg || !container) return null;
+  const rect = container.getBoundingClientRect();
+  const localX = clientX - rect.left;
+  const localY = clientY - rect.top;
+  if(localX < 0 || localY < 0 || localX > rect.width || localY > rect.height) return null;
+  const fit = Math.min(rect.width / currentImg.width, rect.height / currentImg.height);
+  const baseW = currentImg.width * fit;
+  const baseH = currentImg.height * fit;
+  const drawW = baseW * zoomScale;
+  const drawH = baseH * zoomScale;
+  const drawX = (rect.width - drawW) / 2 + panX;
+  const drawY = (rect.height - drawH) / 2 + panY;
+  const relX = localX - drawX;
+  const relY = localY - drawY;
+  if(relX < 0 || relY < 0 || relX > drawW || relY > drawH) return null;
+  const imgX = Math.floor((relX / drawW) * currentImg.width);
+  const imgY = Math.floor((relY / drawH) * currentImg.height);
+  return { imgX, imgY, localX, localY };
+}
+
+function updateLoupe(clientX, clientY){
+  const data = getImagePixelFromClient(clientX, clientY);
+  const loupe = document.getElementById('pickerLoupe');
+  const hint = document.getElementById('pickerHint');
+  if(!loupe || !hint || !data || !currentImg){
+    if(loupe) loupe.style.display = 'none';
+    return;
+  }
+  hint.style.display = 'block';
+  loupe.style.display = 'block';
+  loupe.style.left = `${data.localX - 55}px`;
+  loupe.style.top = `${data.localY - 55}px`;
+  const lc = document.getElementById('loupeCanvas');
+  const lctx = lc.getContext('2d');
+  lctx.clearRect(0,0,110,110);
+  const sw = 12, sh = 12;
+  const sx = Math.max(0, Math.min(currentImg.width - sw, data.imgX - Math.floor(sw/2)));
+  const sy = Math.max(0, Math.min(currentImg.height - sh, data.imgY - Math.floor(sh/2)));
+  lctx.imageSmoothingEnabled = false;
+  lctx.drawImage(currentImg, sx, sy, sw, sh, 0, 0, 110, 110);
+}
+
+function stopWorkspacePicker(){
+  pickerActive = false;
+  const hint = document.getElementById('pickerHint');
+  const loupe = document.getElementById('pickerLoupe');
+  if(hint) hint.style.display = 'none';
+  if(loupe) loupe.style.display = 'none';
+}
+
+function runMatch(){
+  const selected = palette.filter(p => p.selected);
+  const container = document.getElementById('results');
+  if(!container) return;
+
+  const printContainer = document.getElementById('printMatchesOutput');
+  const vPrintContainer = document.getElementById('printMatchesOutputVertical');
+  const printWrapper = document.getElementById('premiumPrintWrapper');
+  if(printWrapper){
+    printWrapper.classList.toggle('print-compact', selected.length > 12);
+  }
+
+  if(!selected.length){
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;width:100%;">No active finishes chosen.</div>';
+    if(printContainer) printContainer.innerHTML = '';
+    if(vPrintContainer) vPrintContainer.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '';
+  if(printContainer) printContainer.innerHTML = '';
+  if(vPrintContainer) vPrintContainer.innerHTML = '';
+
+  // All selected colors — flat list, no category headers
+  selected.forEach(item => {
+    const currentHex = item.hex;
+    const matches = findNearest(currentHex, 3);
+
+    // ── Screen card ──
+    const block = document.createElement('div');
+    block.className = 'result-block';
+    block.innerHTML = `
+      <div class="result-top">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="source-chip" style="background:${currentHex}"></div>
+        </div>
+      </div>
+    `;
+
+    const grid = document.createElement('div');
+    grid.className = 'match-grid';
+    matches.forEach(m => {
+      const pct = Math.max(0, Math.round(100 - m.dist * 1.8));
+      const cardText = getReadableTextColor(m.hex);
+      grid.innerHTML += `
+        <div class="match-tile" style="--match-color:${m.hex};--match-text:${cardText};">
+          <div class="match-swatch" style="background:${m.hex}"></div>
+          <div class="match-name">${m.name}</div>
+          <div class="match-code">#${m.code}</div>
+          <div class="match-percent">${pct}% Match</div>
+        </div>
+      `;
+    });
+    block.appendChild(grid);
+    container.appendChild(block);
+
+    // ── Print row ──
+    if(printContainer){
+      const pRow = document.createElement('div');
+      pRow.className = 'print-row-item';
+      let html = `<div class="print-source"><div class="print-source-chip" style="background:${currentHex}"></div></div>`;
+      html += `<div class="print-matches-container">`;
+      matches.forEach(m => {
+        const pct = Math.max(0, Math.round(100 - m.dist * 1.8));
+        const printText = getReadableTextColor(m.hex);
+        html += `<div class="print-match-box" style="--print-match-color:${m.hex};--print-match-text:${printText};">
+          <div class="print-match-swatch" style="background:${m.hex}"></div>
+          <div class="print-match-info">
+            <span class="print-name">${m.name}</span>
+            <span class="print-code">#${m.code}</span>
+            <span class="print-pct">${pct}% Match</span>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+      pRow.innerHTML = html;
+      printContainer.appendChild(pRow);
+      if(vPrintContainer){
+        const vp = pRow.cloneNode(true);
+        vPrintContainer.appendChild(vp);
+      }
+    }
+  });
+}
+
+function clearAll(){
+  currentImg = null; palette = []; originalBase64 = "";
+  if(imgEl) imgEl.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1'><rect width='20' height='20' x='2' y='2' rx='2'></rect></svg>";
+  document.getElementById('printTargetImg').src = '';
+  const vImg = document.getElementById('printTargetImgVertical');
+  if(vImg) vImg.src = '';
+  document.getElementById('paletteSwatches').innerHTML = '';
+  document.getElementById('results').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;width:100%;">Upload an image to see matches.</div>';
+  document.getElementById('exportJpgBtn').style.display = 'none';
+  document.getElementById('exportPdfBtn').style.display = 'none';
+  const vJ = document.getElementById('exportVJpgBtn');
+  const vP = document.getElementById('exportVPdfBtn');
+  if(vJ) vJ.style.display = 'none';
+  if(vP) vP.style.display = 'none';
+  const drop = document.getElementById('dropZone');
+  if(drop) drop.style.display = 'flex';
+  document.getElementById('fileInput').value = '';
+  stopWorkspacePicker();
+  const workspacePickBtn = document.getElementById('workspacePickBtn');
+  if(workspacePickBtn){
+    workspacePickBtn.style.display = 'none';
+    workspacePickBtn.textContent = 'Pick Color From Image';
+  }
+  zoomScale = 1; panX = 0; panY = 0; applyTransform();
+}
+
+async function exportBundle(type, layout='landscape'){
+  const isVertical = layout === 'vertical';
+  const target = isVertical ? document.getElementById('premiumPrintWrapperVertical') : document.getElementById('premiumPrintWrapper');
+  const btn = type === 'jpg'
+    ? (isVertical ? document.getElementById('exportVJpgBtn') : document.getElementById('exportJpgBtn'))
+    : (isVertical ? document.getElementById('exportVPdfBtn') : document.getElementById('exportPdfBtn'));
+  const oldText = btn.textContent;
+  btn.textContent = 'Rendering...'; btn.disabled = true;
+
+  try{
+    const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/jpeg', 0.96);
+
+    if(type === 'jpg'){
+      const link = document.createElement('a');
+      link.download = `Color_Specification_Report_${layout}_${Date.now()}.jpg`;
+      link.href = imgData; link.click();
+    }else{
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: isVertical ? 'portrait' : 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+      doc.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
+      doc.save(`Color_Specification_Report_${layout}_${Date.now()}.pdf`);
+    }
+  }catch(err){ alert('Export failed: ' + err.message); }
+
+  btn.textContent = oldText; btn.disabled = false;
+}
+
+const fileIn = document.getElementById('fileInput');
+if(fileIn) fileIn.onchange = e => handleFile(e.target.files[0]);
+const dz = document.getElementById('dropZone');
+if(dz){
+  dz.ondragover = e => e.preventDefault();
+  dz.ondrop = e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
+}
+const workspacePickBtn = document.getElementById('workspacePickBtn');
+if(workspacePickBtn){
+  workspacePickBtn.onclick = () => {
+    if(!currentImg){ alert('Please upload an image first.'); return; }
+    pickerActive = !pickerActive;
+    workspacePickBtn.textContent = pickerActive ? 'Cancel Color Pick' : 'Pick Color From Image';
+    if(!pickerActive) stopWorkspacePicker();
+  };
+}
+if(container){
+  container.addEventListener('mousemove', (e) => {
+    if(!pickerActive) return;
+    updateLoupe(e.clientX, e.clientY);
+  });
+  container.addEventListener('mouseleave', () => {
+    if(!pickerActive) return;
+    const loupe = document.getElementById('pickerLoupe');
+    if(loupe) loupe.style.display = 'none';
+  });
+  container.addEventListener('click', (e) => {
+    if(!pickerActive || !currentImg) return;
+    const data = getImagePixelFromClient(e.clientX, e.clientY);
+    if(!data) return;
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    const cx = c.getContext('2d');
+    cx.drawImage(currentImg, data.imgX, data.imgY, 1, 1, 0, 0, 1, 1);
+    const px = cx.getImageData(0,0,1,1).data;
+    addManualColor(rgbToHex(px[0],px[1],px[2]));
+    stopWorkspacePicker();
+    workspacePickBtn.textContent = 'Pick Color From Image';
+  });
+}
+function updateAddPreview(){
+  const colorInput = document.getElementById('addColorInput');
+  if(!colorInput) return;
+  const hex = colorInput.value;
+  document.getElementById('addHexValue').textContent = hex.toUpperCase();
+  document.getElementById('addColorPreview').style.background = hex;
+}
+const addColorBtn = document.getElementById('addColorBtn');
+if(addColorBtn){
+  addColorBtn.onclick = () => {
+    document.getElementById('addColorModal').classList.add('open');
+    updateAddPreview();
+  };
+}
+const addColorInput = document.getElementById('addColorInput');
+if(addColorInput){
+  addColorInput.oninput = updateAddPreview;
+}
+const cancelAddBtn = document.getElementById('cancelAddBtn');
+if(cancelAddBtn) cancelAddBtn.onclick = () => document.getElementById('addColorModal').classList.remove('open');
+const saveAddBtn = document.getElementById('saveAddBtn');
+if(saveAddBtn) saveAddBtn.onclick = () => {
+  const hex = document.getElementById('addColorInput').value;
+  addManualColor(hex);
+  document.getElementById('addColorModal').classList.remove('open');
+};
+const editHue = document.getElementById('editHue');
+const editSat = document.getElementById('editSat');
+const editLight = document.getElementById('editLight');
+if(editHue && editSat && editLight){
+  editHue.oninput = updateEditPreview;
+  editSat.oninput = updateEditPreview;
+  editLight.oninput = updateEditPreview;
+}
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+if(cancelEditBtn) cancelEditBtn.onclick = closeEditModal;
+const saveEditBtn = document.getElementById('saveEditBtn');
+if(saveEditBtn) saveEditBtn.onclick = () => {
+  if(editingPaletteIndex === null) return;
+  const h = parseInt(document.getElementById('editHue').value,10);
+  const s = parseInt(document.getElementById('editSat').value,10);
+  const l = parseInt(document.getElementById('editLight').value,10);
+  const [r,g,b] = hslToRgb(h,s,l);
+  palette[editingPaletteIndex].hex = rgbToHex(r,g,b);
+  closeEditModal();
+  renderPalette();
+  runMatch();
+};
+</script>
+</body>
+</html>
